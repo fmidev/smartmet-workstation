@@ -10,9 +10,9 @@
 #include <vector>
 #include <string>
 
-// Luokka pit‰‰ tietoa mit‰ hakemistoa on tarkoitus siivota **kaikista** tiedostoista 
-// (ei rekursiivinen). Pit‰‰ sis‰ll‰‰n hakemiston polkua ja vanhuus p‰iv‰‰ eli kuinka monta p‰iv‰‰
-// vanhemmat tiedostot on tarkoitus siivota pois.
+// This class keeps track of which directory is meant to be cleaned of **all** files
+// (not recursive). It holds the directory path and the age in days, i.e. how many days
+// older files are meant to be cleaned away.
 class NFmiDirectorCleanerInfo
 {
 public:
@@ -33,12 +33,12 @@ public:
 	void CleanDirectory(void);
 
 private:
-	// Mit‰ hakemistoa t‰ss‰ siivotaan.
+	// Which directory is cleaned here.
 	std::string itsDirectoryPath;
 
-	// Kuinka monta p‰iv‰‰ vanhemmat tiedostot on tarkoitus siivota pois.
-	// Jos luku on 0 tai negatiivinen, ei tehd‰ siivousta lainkaan.
-	// esim. luku 0.25 on kuusi tuntia ja 2 on 48 tuntia (eli sit‰ vanhemmat siivotaan)
+	// How many days older files are meant to be cleaned away.
+	// If the number is 0 or negative, no cleaning is done at all.
+	// e.g. the value 0.25 is six hours and 2 is 48 hours (i.e. files older than that are cleaned)
 	double itsKeepDataDays;
 
 };
@@ -63,12 +63,12 @@ public:
 	void CleanFilePattern(void);
 
 private:
-	// Mit‰ tiedostonimi-patternia on tarkoitus siivota (koko polku mukana).
+	// Which file-name pattern is meant to be cleaned (full path included).
 	std::string itsFilePattern;
 
-	// Kuinka monta uusinta tiedostoa kyseisest‰ filePatternista on aina tarkoitus s‰ilytt‰‰ oli 
-	// kuinka vanhoja tiedostoja hyv‰ns‰. Negatiivisilla ja 0 arvoilla ei siivota ollenkaan, 
-	// vaan pidet‰‰n kaikki tiedostot tallessa.
+	// How many of the newest files from the given filePattern are always meant to be kept, no
+	// matter how old the files are. With negative and 0 values nothing is cleaned at all,
+	// and all files are kept.
 	int itsKeepMaxFiles;
 
 };
@@ -88,7 +88,7 @@ public:
 	double CleaningTimeStepInHours(void) const {return itsCleaningTimeStepInHours;}
 	void CleaningTimeStepInHours(double newValue) {itsCleaningTimeStepInHours = newValue;}
 
-	// HUOM! t‰m‰n voi initialisoida NFmiSettings-luokan asetuksien avulla.
+	// NOTE! this can be initialized using the settings of the NFmiSettings class.
 	void InitFromSettings(const std::string &theInitNameSpace);
 	void StoreToSettings(void);
 	void Add(const NFmiDirectorCleanerInfo &theDirInfo);
@@ -102,8 +102,8 @@ private:
 	bool CleanDirectories(void);
 	bool CleanFilePatterns(void);
 
-	// Kuinka pitk‰ tauko pidet‰‰n siivous operaatioiden v‰lill‰ (esim. 3 tunnin v‰lein tms.). 
-	// Jos negatiivinen/0, ei tehd‰ koskaan mit‰‰n.
+	// How long a pause is kept between cleaning operations (e.g. every 3 hours or so).
+	// If negative/0, nothing is ever done.
 	double itsCleaningTimeStepInHours;
 	std::vector<NFmiDirectorCleanerInfo> itsDirectoryInfos;
 	std::vector<NFmiFilePatternCleanerInfo> itsPatternInfos;

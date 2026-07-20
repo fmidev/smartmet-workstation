@@ -53,7 +53,7 @@ public:
 	std::string GetBestGuiUsedMapLayerName(size_t layerIndex, bool backgroundMapCase) const;
 	const std::string& GetMacroReferenceName(size_t layerIndex, bool backgroundMapCase) const;
 
-	// Tätä pitää kutsua, kun NFmiMapConfiguration olio on muuten alustettu!
+	// This must be called once the NFmiMapConfiguration object is otherwise initialized!
 	void InitializeFileNameBasedGuiNameVectors();
 
 private:
@@ -66,16 +66,16 @@ private:
 	std::vector<int> itsOverMapDibDrawingStyles;
 	std::string itsProjectionFileName;
 	std::string itsProjection;
-	// Optionaalinen nimi karttalayereille ja overlay kuville, jota on tarkoitus käyttää ainakin käyttöliittymien kanssa, 
-	// kun käyttäjä esim. vaihtaa karttapohjaa suoraan (nimet menee popup valikkoon tai tooltippiin).
+	// Optional name for map layers and overlay images, meant to be used at least with the user interfaces,
+	// when the user e.g. switches the base map directly (the names go into a popup menu or tooltip).
 	std::vector<std::string> itsBackgroundMapDescriptiveNames;
 	std::vector<std::string> itsOverlayMapDescriptiveNames;
-	// Optionaalinen makro referenssi nimi karttalayereille ja overlay kuville, jota käytetään viittäämään
-	// käytettyyn karttakuvaan näyttömakrojen yhteydessä. Tällöin näyttömakron säätö on joustavampaa kuin suoraan kuvan 
-	// indeksiin (vektorissa) viittaaminen, jos esim. vaihdetaan kuvien järjestystä tai lisätään/poistetaan kuvia listoilta.
+	// Optional macro reference name for map layers and overlay images, used to refer to
+	// the used map image in connection with view macros. This makes view macro configuration more flexible than referring directly to the image
+	// index (in the vector), e.g. if the image order is changed or images are added/removed from the lists.
 	std::vector<std::string> itsBackgroundMapMacroReferenceNames;
 	std::vector<std::string> itsOverlayMapMacroReferenceNames;
-	// Tiedostonimi pohjaiset karttapohjien Gui nimet (3. prioriteetti listalla)
+	// File-name based GUI names for the base maps (3rd priority in the list)
 	std::vector<std::string> itsBackgroundMapFileNameBasedGuiNames;
 	std::vector<std::string> itsOverlayMapFileNameBasedGuiNames;
 };

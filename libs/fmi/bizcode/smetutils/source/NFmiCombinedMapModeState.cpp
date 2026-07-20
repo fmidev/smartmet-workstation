@@ -69,10 +69,10 @@ bool NFmiCombinedMapModeState::isMapIndexInLocalSection() const
     return combinedModeMapIndex_ < localMapSize_;
 }
 
-// Tämän funktion on tehtävä varmistaa että jos ollaan local-only moodissa,
-// ja käyttäjä haluaa muuttaa karttaindeksiä (esim. next/previous)
-// että combinedModeMapIndex_ ja lastUsedLocalModeMapIndex_ ovat samoja, ennen 
-// kuin itse combinedModeMapIndex_:ia aletaan taas muuttamaan.
+// This function must ensure that if we are in local-only mode,
+// and the user wants to change the map index (e.g. next/previous),
+// that combinedModeMapIndex_ and lastUsedLocalModeMapIndex_ are the same, before
+// combinedModeMapIndex_ itself starts being changed again.
 void NFmiCombinedMapModeState::mapIndexIsAboutToChangeChecks()
 {
     if(isLocalOnlyMapModeInUse())
@@ -85,11 +85,14 @@ void NFmiCombinedMapModeState::mapIndexIsAboutToChangeChecks()
 int NFmiCombinedMapModeState::currentMapSectionIndex() const
 {
     if(isLocalOnlyMapModeInUse())
-        return lastUsedLocalModeMapIndex_; // Palautetaan lokaalin kartan indeksi 'erillismuistista'
+        // Return the local map index from the 'separate memory'
+        return lastUsedLocalModeMapIndex_;
     else if(isMapIndexInLocalSection())
-        return combinedModeMapIndex_; // Ollaan combine moodissa, mutta lokaali sectiossa, palautetaan normi indeksi
+        // We are in combine mode, but in the local section, return the normal index
+        return combinedModeMapIndex_;
     else
-        return combinedModeMapIndex_ - localMapSize_; // Palautetaan wms sectioon osoittava indeksi muutettuna sen omaksi 0-kantaiseksi indeksiksi
+        // Return the index pointing to the wms section, converted to its own 0-based index
+        return combinedModeMapIndex_ - localMapSize_;
 }
 
 void NFmiCombinedMapModeState::checkIndexUnderFlow()
@@ -97,9 +100,11 @@ void NFmiCombinedMapModeState::checkIndexUnderFlow()
     if(combinedModeMapIndex_ < getMinimumIndex())
     {
         if(isLocalOnlyMapModeInUse())
-            combinedModeMapIndex_ = localMapSize_ - 1; // jos meni alle, mennään lokaali karttojen loppuun
+            // If it went below, go to the end of the local maps
+            combinedModeMapIndex_ = localMapSize_ - 1;
         else
-            combinedModeMapIndex_ = totalMapSize_ - 1; // jos meni alle, mennään totaali karttojen loppuun
+            // If it went below, go to the end of the total maps
+            combinedModeMapIndex_ = totalMapSize_ - 1;
     }
     updateLastUsedLocalModeMapIndex();
 }
@@ -109,10 +114,12 @@ void NFmiCombinedMapModeState::checkIndexOverFlow()
     if(isLocalOnlyMapModeInUse())
     {
         if(combinedModeMapIndex_ >= localMapSize_)
-            combinedModeMapIndex_ = getMinimumIndex(); // jos meni yli, palataan alkuun
+            // If it went over, return to the beginning
+            combinedModeMapIndex_ = getMinimumIndex();
     }
     else if(combinedModeMapIndex_ >= totalMapSize_)
-        combinedModeMapIndex_ = getMinimumIndex(); // jos meni yli, palataan alkuun
+        // If it went over, return to the beginning
+        combinedModeMapIndex_ = getMinimumIndex();
     updateLastUsedLocalModeMapIndex();
 }
 

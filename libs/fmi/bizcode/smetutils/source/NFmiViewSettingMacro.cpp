@@ -52,14 +52,17 @@ bool SkipViewMacroFileCommentLine(std::istream &is)
         is.get(ch);
         if(is.fail())
             return false;
-    } while(std::isspace(ch)); // etsit‰‰n merkki kerrallaan kunnes vastaan tulee ei space (oletus, stream alkaa aina rivin alusta)
+    // Search one character at a time until a non-space is encountered (assumption: the stream always starts at the beginning of a line)
+    } while(std::isspace(ch));
     if(ch == '/' || ch == '#')
-    { // Jos oli kommentti merkki rivin alussa (spacejen j‰lkeen), luetaan loppu rivi pois
+    {
+        // If there was a comment character at the start of the line (after the spaces), read the rest of the line away
         ::SkipRestOfTheLine(is);
         return true;
     }
     else
-    { // Jos oli jotain muuta alussa, laitetaan merkki takaisin streamiin
+    {
+        // If there was something else at the start, put the character back into the stream
         is.unget();
         return false;
     }
@@ -79,31 +82,33 @@ bool GetNextNumberFromViewMacroFile(std::istream &is, double &number)
     }
 }
 
-// T‰m‰ luetaan raa'asta tiedostosta, ilman ett‰ poistetaan kommentteja ja ett‰ luetaan ensin koko tiedosto streamiin muistiin.
+// This is read from the raw file, without removing comments and without first reading the whole file into a stream in memory.
 void NFmiLightWeightViewSettingMacro::Read(std::istream& is)
 {
     fViewMacroOk = true;
     double versionNumber = -1;
-    // Luetaan ensin versionumero pois alta
+    // First read the version number out of the way
     if(::GetNextNumberFromViewMacroFile(is, versionNumber))
     {
         ::SkipRestOfTheLine(is);
         double nameStringLength = -1;
-        // Luetaan sitten nimi-stringiin liittyv‰ numero
+        // Then read the number related to the name string
         if(::GetNextNumberFromViewMacroFile(is, nameStringLength))
         {
             ::SkipRestOfTheLine(is);
             double descriptionStringLength = -1;
-            // Luetaan sitten description-stringiin liittyv‰ numero
+            // Then read the number related to the description string
             if(::GetNextNumberFromViewMacroFile(is, descriptionStringLength))
             {
                 int stringSize = static_cast<int>(descriptionStringLength);
                 if(stringSize > 0)
                 {
                     if(stringSize > 4000)
-                        stringSize = 4000; // rajoitetaan luetun descriptionin kooksi 4000 merkki‰
+                        // Limit the size of the read description to 4000 characters
+                        stringSize = 4000;
                     char ch;
-                    is.get(ch); // luetaan space pois
+                    // Read the space away
+                    is.get(ch);
                     itsDescription.resize(stringSize);
                     is.read(&itsDescription[0], stringSize);
                     return;
@@ -167,8 +172,8 @@ void NFmiViewSettingMacro::Param::DrawParam(const boost::shared_ptr<NFmiDrawPara
 
 void NFmiViewSettingMacro::Param::SetMacroParamInitFileNames(const std::string &theRootPath)
 {
-	// siis jos kyseess‰ macroParam, pit‰‰ sille asettaa initFileName oikein, ett‰
-	// macroParamit saadaan ladattua oikein alihakemistoistakin.
+	// I.e. if this is a macroParam, its initFileName must be set correctly, so that
+	// the macroParams can be loaded correctly from subdirectories too.
 	if(NFmiDrawParam::IsMacroParamCase(DataType()))
 	{
 		std::string tmpStr(theRootPath);
@@ -197,34 +202,37 @@ void NFmiViewSettingMacro::Param::Write(std::ostream& os) const
 	os << "// ModelOrigTimeOffsetInHours" << endl;
 	os << itsModelOrigTimeOffsetInHours << endl;
 	os << "// fHidden fActive fShowTimeDifference fShowDifferenceToOriginalData" << endl;
-    // fShowTimeDifference is removed option, storing dummy value for backward compatibility
+    // FShowTimeDifference is removed option, storing dummy value for backward compatibility
 	os << fHidden << " " << fActive << " " << false << " " << fShowDifferenceToOriginalData << endl;
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee t‰h‰n extradatan t‰yttˆ‰, jotta se saadaan talteen tiedopstoon siten ett‰
-	// edelliset versiot eiv‰t mene solmuun vaikka on tullut uutta dataa.
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
+	// When new variables appear, add extra-data filling here, so that it gets stored to the file in such a way that
+	// previous versions don't get tangled up even though new data has appeared.
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::Param::Write ep‰onnistui");
+		throw runtime_error("NFmiViewSettingMacro::Param::Write ep√§onnistui");
 }
 
 void NFmiViewSettingMacro::Param::Read(std::istream& is)
 { 
     static const std::string exceptionErrorMessage = "NFmiViewSettingMacro::Param::Read failed";
-    // toivottavasti olet poistanut kommentit luettavasta streamista!!
+    // Hopefully you have removed the comments from the stream being read!!
 	if(is)
 		is >> *itsDrawParam;
 	itsDrawParam->ViewMacroDrawParam(true);
 	if(is)
 		is >> itsDataIdent;
 	if(is)
-		itsDrawParam->Param(itsDataIdent); // pit‰‰ asettaa myˆs parametri kohdalleen drawParamiin, muuten koiranpennut rupee juhlimaan
+		// The parameter must also be set correctly into the drawParam, otherwise all hell breaks loose
+		itsDrawParam->Param(itsDataIdent);
 	if(is)
 		is >> itsLevel;
 	if(is)
-		itsDrawParam->Level(itsLevel); // myˆs level pit‰‰ asettaa t‰ss‰ heti
+		// The level must also be set here right away
+		itsDrawParam->Level(itsLevel);
 	if(is)
 	{
 		int tmp = 0;
@@ -235,17 +243,18 @@ void NFmiViewSettingMacro::Param::Read(std::istream& is)
 		is >> itsModelOrigTimeOffsetInHours;
     if(is)
     {
-        // fShowTimeDifference is removed option, reading dummy value for backward compatibility
+        // FShowTimeDifference is removed option, reading dummy value for backward compatibility
         bool removedOption_fShowTimeDifference = false;
 		is >> fHidden >> fActive >> removedOption_fShowTimeDifference >> fShowDifferenceToOriginalData;
     }
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
 	is >> extraData;
-	// T‰ss‰ sitten otetaaan extradatasta talteen uudet muuttujat, mit‰ on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, k‰sittele t‰ss‰.
+	// Here new variables that may have appeared are then taken from the extra data
+	// i.e. if there are new variables or values, handle them here.
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
@@ -279,30 +288,32 @@ void NFmiViewSettingMacro::Mask::Write(std::ostream& os) const
 	os << "// MaskEnabled" << endl;
 	os << fMaskEnabled << endl;
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee t‰h‰n extradatan t‰yttˆ‰, jotta se saadaan talteen tiedopstoon siten ett‰
-	// edelliset versiot eiv‰t mene solmuun vaikka on tullut uutta dataa.
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
+	// When new variables appear, add extra-data filling here, so that it gets stored to the file in such a way that
+	// previous versions don't get tangled up even though new data has appeared.
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::Mask::Write ep‰onnistui");
+		throw runtime_error("NFmiViewSettingMacro::Mask::Write ep√§onnistui");
 }
 
 void NFmiViewSettingMacro::Mask::Read(std::istream& is)
 { 
     static const std::string exceptionErrorMessage = "NFmiViewSettingMacro::Mask::Read failed";
-    // toivottavasti olet poistanut kommentit luettavasta streamista!!
+    // Hopefully you have removed the comments from the stream being read!!
 	is >> itsParamSettings;
 	is >> itsMaskSettings;
 	is >> fMaskEnabled;
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
 	is >> extraData;
-	// T‰ss‰ sitten otetaaan extradatasta talteen uudet muuttujat, mit‰ on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, k‰sittele t‰ss‰.
+	// Here new variables that may have appeared are then taken from the extra data
+	// i.e. if there are new variables or values, handle them here.
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
 }
@@ -363,30 +374,32 @@ void NFmiViewSettingMacro::MaskSettings::Write(std::ostream& os) const
 	os << "// ShowMasksOnMapView UseMasksInTimeSerialViews fUseMasksWithFilterTool fUseMaskWithBrush" << endl;
 	os << fShowMasksOnMapView << " " << fUseMasksInTimeSerialViews << " " << fUseMasksWithFilterTool << " " << fUseMaskWithBrush << endl;
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee t‰h‰n extradatan t‰yttˆ‰, jotta se saadaan talteen tiedopstoon siten ett‰
-	// edelliset versiot eiv‰t mene solmuun vaikka on tullut uutta dataa.
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
+	// When new variables appear, add extra-data filling here, so that it gets stored to the file in such a way that
+	// previous versions don't get tangled up even though new data has appeared.
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::MaskSettings::Write ep‰onnistui");
+		throw runtime_error("NFmiViewSettingMacro::MaskSettings::Write ep√§onnistui");
 }
 
 void NFmiViewSettingMacro::MaskSettings::Read(std::istream& is)
 { 
     static const std::string exceptionErrorMessage = "NFmiViewSettingMacro::MaskSettings::Read failed";
 
-    // toivottavasti olet poistanut kommentit luettavasta streamista!!
+    // Hopefully you have removed the comments from the stream being read!!
 	NFmiDataStoringHelpers::ReadContainer(itsMasks, is);
 	is >> fShowMasksOnMapView >> fUseMasksInTimeSerialViews >> fUseMasksWithFilterTool >> fUseMaskWithBrush;
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
 	is >> extraData;
-	// T‰ss‰ sitten otetaaan extradatasta talteen uudet muuttujat, mit‰ on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, k‰sittele t‰ss‰.
+	// Here new variables that may have appeared are then taken from the extra data
+	// i.e. if there are new variables or values, handle them here.
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
 }
@@ -440,14 +453,15 @@ void NFmiViewSettingMacro::MapRow::Write(std::ostream& os) const
 	NFmiDataStoringHelpers::WriteContainer(itsRowParams, os, string("\n"));
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::MapRow::Write ep‰onnistui");
+		throw runtime_error("NFmiViewSettingMacro::MapRow::Write ep√§onnistui");
 }
 
 void NFmiViewSettingMacro::MapRow::Read(std::istream& is)
-{ // toivottavasti olet poistanut kommentit luettavasta streamista!!
+{
+	// Hopefully you have removed the comments from the stream being read!!
 	NFmiDataStoringHelpers::ReadContainer(itsRowParams, is);
 	if(is.fail())
-		throw runtime_error("NFmiViewSettingMacro::MapRow::Read ep‰onnistui");
+		throw runtime_error("NFmiViewSettingMacro::MapRow::Read ep√§onnistui");
 }
 
 NFmiViewSettingMacro::TimeViewRow::TimeViewRow(void)
@@ -515,38 +529,40 @@ void NFmiViewSettingMacro::TimeViewRow::Write(std::ostream& os) const
 	os << "// Param" << endl;
 	os << itsParam << endl;
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee t‰h‰n extradatan t‰yttˆ‰, jotta se saadaan talteen tiedopstoon siten ett‰
-	// edelliset versiot eiv‰t mene solmuun vaikka on tullut uutta dataa.
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
+	// When new variables appear, add extra-data filling here, so that it gets stored to the file in such a way that
+	// previous versions don't get tangled up even though new data has appeared.
 
-	// 1. lis‰ttyn‰ ominaisuutena on lista side-parametereista yhten‰ stringin‰ (HUOM! pakko lis‰t‰ myˆs tyhj‰ lista)
+	// 1. an added feature is a list of side-parameters as a single string (NOTE! an empty list must also be added)
 	std::stringstream stringOut;
 	NFmiDataStoringHelpers::WriteContainer(itsSideParameters, stringOut, string("\n"));
-	// Huom! talletettavasta stringist‰ pit‰‰ myˆs poistaa kaikki kommentit ensin, muuten homma ei toimi!!!
+	// Note! all comments must also be removed from the string to be stored first, otherwise it won't work!!!
 	extraData.Add(::removeComments(stringOut.str()));
 
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::TimeViewRow::Write ep‰onnistui");
+		throw runtime_error("NFmiViewSettingMacro::TimeViewRow::Write ep√§onnistui");
 }
 
 void NFmiViewSettingMacro::TimeViewRow::Read(std::istream& is)
 { 
     static const std::string exceptionErrorMessage = "NFmiViewSettingMacro::TimeViewRow::Read failed";
 
-    // toivottavasti olet poistanut kommentit luettavasta streamista!!
+    // Hopefully you have removed the comments from the stream being read!!
 	is >> itsParam;
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
 	is >> extraData;
-	// T‰ss‰ sitten otetaaan extradatasta talteen uudet muuttujat, mit‰ on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, k‰sittele t‰ss‰.
+	// Here new variables that may have appeared are then taken from the extra data
+	// i.e. if there are new variables or values, handle them here.
 
-	// 1. lis‰ttyn‰ ominaisuutena on lista side-parametereista yhten‰ stringin‰
+	// 1. an added feature is a list of side-parameters as a single string
 	itsSideParameters.clear();
 	if(extraData.itsStringValues.size() >= 1)
 	{
@@ -566,10 +582,10 @@ static NFmiViewSettingMacro::MapRow MakeMapRow(NFmiDrawParamList *theDrawParamLi
 		boost::shared_ptr<NFmiDrawParam> drawParam = theDrawParamList->Current();
 		if(NFmiDrawParam::IsMacroParamCase(drawParam->DataType()))
 		{ 
-            // t‰m‰ on ik‰v‰‰ koodia, mutta en keksinyt t‰h‰n h‰t‰‰n parempaa. Eli pit‰‰ saada viewMacrossa olevaan macroParamiin
-			// suhteellinen polku talteen, joka talletetaan drawParamiin. Mutta t‰m‰ drawParam on kahdessa paikassa
-			// hieman erilaisena ja oikean suht.polun saa vain MacroParamSystemist‰ lˆytyv‰st‰ macroParamin DrawParamista
-			// eika dokumentista lˆytyv‰st‰ DrawParamListasta.
+            // This is ugly code, but I couldn't think of anything better right now. I.e. the relative path of the macroParam in the viewMacro
+			// must be stored, which is saved into the drawParam. But this drawParam exists in two places
+			// in a slightly different form, and the correct relative path can only be obtained from the macroParam's DrawParam found in the MacroParamSystem
+			// and not from the DrawParamList found in the document.
             auto macroParamPtr = theMacroParamSystem.GetWantedMacro(drawParam->InitFileName());
 			if(macroParamPtr)
 				drawParam->MacroParamRelativePath(macroParamPtr->DrawParam()->MacroParamRelativePath());
@@ -598,21 +614,22 @@ void NFmiViewSettingMacro::GeneralDoc::Write(std::ostream& os) const
 	os << "// CPLocationVector" << endl;
 	NFmiDataStoringHelpers::WriteContainer(itsCPLocationVector, os, string(" "));
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee t‰h‰n extradatan t‰yttˆ‰, jotta se saadaan talteen tiedopstoon siten ett‰
-	// edelliset versiot eiv‰t mene solmuun vaikka on tullut uutta dataa.
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
+	// When new variables appear, add extra-data filling here, so that it gets stored to the file in such a way that
+	// previous versions don't get tangled up even though new data has appeared.
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::GeneralDoc::Write ep‰onnistui");
+		throw runtime_error("NFmiViewSettingMacro::GeneralDoc::Write ep√§onnistui");
 }
 
 void NFmiViewSettingMacro::GeneralDoc::Read(std::istream& is)
 { 
     static const std::string exceptionErrorMessage = "NFmiViewSettingMacro::GeneralDoc::Read failed";
 
-    // toivottavasti olet poistanut kommentit luettavasta streamista!!
+    // Hopefully you have removed the comments from the stream being read!!
 	is >> itsProjectionCurvatureInfo;
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
@@ -621,10 +638,11 @@ void NFmiViewSettingMacro::GeneralDoc::Read(std::istream& is)
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
 	is >> extraData;
-	// T‰ss‰ sitten otetaaan extradatasta talteen uudet muuttujat, mit‰ on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, k‰sittele t‰ss‰.
+	// Here new variables that may have appeared are then taken from the extra data
+	// i.e. if there are new variables or values, handle them here.
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
@@ -696,14 +714,15 @@ void NFmiViewSettingMacro::CrossSectionView::Write(std::ostream& os) const
 	os << "// CrossSectionSystem" << endl;
 	os << itsCrossSectionSystem;
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee t‰h‰n extradatan t‰yttˆ‰, jotta se saadaan talteen tiedopstoon siten ett‰
-	// edelliset versiot eiv‰t mene solmuun vaikka on tullut uutta dataa.
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
+	// When new variables appear, add extra-data filling here, so that it gets stored to the file in such a way that
+	// previous versions don't get tangled up even though new data has appeared.
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::CrossSectionView::Write ep‰onnistui");
+		throw runtime_error("NFmiViewSettingMacro::CrossSectionView::Write ep√§onnistui");
 
 }
 
@@ -711,7 +730,7 @@ void NFmiViewSettingMacro::CrossSectionView::Read(std::istream& is)
 { 
     static const std::string exceptionErrorMessage = "NFmiViewSettingMacro::CrossSectionView::Read failed";
 
-    // toivottavasti olet poistanut kommentit luettavasta streamista!!
+    // Hopefully you have removed the comments from the stream being read!!
 	NFmiDataStoringHelpers::ReadContainer(itsMapRowSettings, is);
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
@@ -723,10 +742,11 @@ void NFmiViewSettingMacro::CrossSectionView::Read(std::istream& is)
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
 	is >> extraData;
-	// T‰ss‰ sitten otetaaan extradatasta talteen uudet muuttujat, mit‰ on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, k‰sittele t‰ss‰.
+	// Here new variables that may have appeared are then taken from the extra data
+	// i.e. if there are new variables or values, handle them here.
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
@@ -818,21 +838,23 @@ void NFmiViewSettingMacro::TimeView::Write(std::ostream& os) const
 	os << "// itsStartTimeOffset itsEndTimeOffset" << endl;
 	os << itsStartTimeOffset << " " << itsEndTimeOffset << endl;
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee t‰h‰n extradatan t‰yttˆ‰, jotta se saadaan talteen tiedopstoon siten ett‰
-	// edelliset versiot eiv‰t mene solmuun vaikka on tullut uutta dataa.
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
+	// When new variables appear, add extra-data filling here, so that it gets stored to the file in such a way that
+	// previous versions don't get tangled up even though new data has appeared.
 
-    // Lis‰t‰‰n apudata2 ja 3 ja 4 asetukset n‰yttˆmakroon
+    // Add the helpData2, 3 and 4 settings to the view macro
     extraData.Add(static_cast<double>(fShowHelpData2));
     extraData.Add(static_cast<double>(fShowHelpData3));
     extraData.Add(static_cast<double>(fShowHelpData4));
 
 	NFmiMetTime usedViewMacroTime = NFmiDataStoringHelpers::GetUsedViewMacroTime();
 	std::string timeBagStr = NFmiDataStoringHelpers::GetTimeBagOffSetStr(usedViewMacroTime, itsTimeBag);
-	extraData.Add(timeBagStr); // lis‰t‰‰n 1. extra-string-datana aikaikkunan timebagi offsettina currenttiin aikaan
+	// Add as the 1st extra string data the time window's timebag as an offset to the current time
+	extraData.Add(timeBagStr);
 	if(itsPreciseTimeSerialLatlonPoint != NFmiPoint::gMissingLatlon)
 	{
-		// lis‰t‰‰n 2. extra-string-datana aikasarjaan valitun latlon-pisteen paikka
+		// Add as the 2nd extra string data the position of the latlon point selected for the time series
 		extraData.Add(CtrlViewUtils::Point2String(itsPreciseTimeSerialLatlonPoint)); 
 	}
 	
@@ -840,14 +862,14 @@ void NFmiViewSettingMacro::TimeView::Write(std::ostream& os) const
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::TimeView::Write ep‰onnistui");
+		throw runtime_error("NFmiViewSettingMacro::TimeView::Write ep√§onnistui");
 }
 
 void NFmiViewSettingMacro::TimeView::Read(std::istream& is)
 { 
     static const std::string exceptionErrorMessage = "NFmiViewSettingMacro::TimeView::Read failed";
 
-    // toivottavasti olet poistanut kommentit luettavasta streamista!!
+    // Hopefully you have removed the comments from the stream being read!!
 	NFmiDataStoringHelpers::ReadContainer(itsRows, is);
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
@@ -859,12 +881,13 @@ void NFmiViewSettingMacro::TimeView::Read(std::istream& is)
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
 	is >> extraData;
-	// T‰ss‰ sitten otetaaan extradatasta talteen uudet muuttujat, mit‰ on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, k‰sittele t‰ss‰.
+	// Here new variables that may have appeared are then taken from the extra data
+	// i.e. if there are new variables or values, handle them here.
 
-    // Apudata2 ja 3 asetukset n‰yttˆmakrosta
+    // The helpData2 and 3 settings from the view macro
     fShowHelpData2 = false;
     if(extraData.itsDoubleValues.size() >= 1)
         fShowHelpData2 = extraData.itsDoubleValues[0] != 0;
@@ -878,7 +901,7 @@ void NFmiViewSettingMacro::TimeView::Read(std::istream& is)
 	fTimeBagUpdated = false;
 	if(extraData.itsStringValues.size() >= 1)
 	{
-		// luetaan 1. extra-datana aikaikkunan timebagi offsettina currenttiin aikaan
+		// Read as the 1st extra data the time window's timebag as an offset to the current time
 		if(is.fail())
 			throw std::runtime_error(exceptionErrorMessage);
 		NFmiMetTime usedViewMacroTime = NFmiDataStoringHelpers::GetUsedViewMacroTime();
@@ -886,11 +909,11 @@ void NFmiViewSettingMacro::TimeView::Read(std::istream& is)
 		fTimeBagUpdated = true;
 	}
 
-	// Oletusarvoisesti laitetaan latlon-point puuttuvaksi, jolloin j‰tet‰‰n nykyinen k‰ytˆss‰ oleva piste voimaan.
+	// By default the latlon point is set to missing, in which case the current point in use is left in effect.
 	itsPreciseTimeSerialLatlonPoint = NFmiPoint::gMissingLatlon;
 	if(extraData.itsStringValues.size() >= 2)
 	{
-		// Luetaan 2. extra-string-datana aikaikkunaan valittu latlon-piste.
+		// Read as the 2nd extra string data the latlon point selected for the time window.
 		if(is.fail())
 			throw std::runtime_error(exceptionErrorMessage);
 		itsPreciseTimeSerialLatlonPoint = CtrlViewUtils::String2Point(extraData.itsStringValues[1]);
@@ -930,47 +953,49 @@ void NFmiViewSettingMacro::TempView::Write(std::ostream& os) const
 	os << fShowHirlam << " " << fShowEcmwf << " " << fShowRealSounding << endl;
 
 	// ************************************
-	// T‰st‰ eteenp‰in on versio 2. tavaraa
+	// From here onwards is version 2 stuff
 	// ************************************
 	os << "// MTATempSystem" << endl;
 	os << itsMTATempSystem << endl;
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee t‰h‰n extradatan t‰yttˆ‰, jotta se saadaan talteen tiedopstoon siten ett‰
-	// edelliset versiot eiv‰t mene solmuun vaikka on tullut uutta dataa.
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
+	// When new variables appear, add extra-data filling here, so that it gets stored to the file in such a way that
+	// previous versions don't get tangled up even though new data has appeared.
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::TempView::Write ep‰onnistui");
+		throw runtime_error("NFmiViewSettingMacro::TempView::Write ep√§onnistui");
 }
 
 void NFmiViewSettingMacro::TempView::Read(std::istream& is)
 { 
     static const std::string exceptionErrorMessage = "NFmiViewSettingMacro::TempView::Read failed";
 
-    // toivottavasti olet poistanut kommentit luettavasta streamista!!
+    // Hopefully you have removed the comments from the stream being read!!
 	is >> itsAbsolutRect;
     ::ReadMfcViewStatus(is, itsViewStatus);
     is >> fShowHirlam >> fShowEcmwf >> fShowRealSounding;
 
 	if(itsCurrentVersionNumber > 1.0)
 	{
-		// luetaan uudet ver 2.0 ja myˆh. jutut
+		// Read the new ver 2.0 and later stuff
 		if(is.fail())
 			throw runtime_error(exceptionErrorMessage);
 		is >> itsMTATempSystem;
 
 		if(is.fail())
 			throw runtime_error(exceptionErrorMessage);
-		NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
+		// Finally, the possible extra data
+		NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
 		is >> extraData;
-		// T‰ss‰ sitten otetaaan extradatasta talteen uudet muuttujat, mit‰ on mahdollisesti tullut
-		// eli jos uusia muutujia tai arvoja, k‰sittele t‰ss‰.
+		// Here new variables that may have appeared are then taken from the extra data
+		// i.e. if there are new variables or values, handle them here.
 	}
 	else
 	{
-		// muuten tehd‰‰n sopivia alustuksia uusiin muuttujiin
-		// menn‰‰n itsMTATempSystem-olion defaultti arvoilla
+		// Otherwise make suitable initializations for the new variables
+		// go with the default values of the itsMTATempSystem object
 		itsMTATempSystem = NFmiMTATempSystem();
 	}
 
@@ -1006,21 +1031,22 @@ void NFmiViewSettingMacro::TrajectoryView::Write(std::ostream& os) const
 	os << "// TrajectorySystem" << endl;
 	os << itsTrajectorySystem << endl;
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee t‰h‰n extradatan t‰yttˆ‰, jotta se saadaan talteen tiedopstoon siten ett‰
-	// edelliset versiot eiv‰t mene solmuun vaikka on tullut uutta dataa.
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
+	// When new variables appear, add extra-data filling here, so that it gets stored to the file in such a way that
+	// previous versions don't get tangled up even though new data has appeared.
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::TrajectoryView::Write ep‰onnistui");
+		throw runtime_error("NFmiViewSettingMacro::TrajectoryView::Write ep√§onnistui");
 }
 
 void NFmiViewSettingMacro::TrajectoryView::Read(std::istream& is)
 { 
     static const std::string exceptionErrorMessage = "NFmiViewSettingMacro::TrajectoryView::Read failed";
 
-    // toivottavasti olet poistanut kommentit luettavasta streamista!!
+    // Hopefully you have removed the comments from the stream being read!!
 	is >> itsAbsolutRect;
     ::ReadMfcViewStatus(is, itsViewStatus);
 
@@ -1029,10 +1055,11 @@ void NFmiViewSettingMacro::TrajectoryView::Read(std::istream& is)
 	is >> itsTrajectorySystem;
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
 	is >> extraData;
-	// T‰ss‰ sitten otetaaan extradatasta talteen uudet muuttujat, mit‰ on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, k‰sittele t‰ss‰.
+	// Here new variables that may have appeared are then taken from the extra data
+	// i.e. if there are new variables or values, handle them here.
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
@@ -1068,26 +1095,30 @@ void NFmiViewSettingMacro::WarningCenterView::Write(std::ostream& os) const
 	os << "// Container<Header-Column-Widths-In-Pixels>" << endl;
 	NFmiDataStoringHelpers::WriteContainer(itsHeaderColumnWidthsInPixels, os, string(" "));
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee t‰h‰n extradatan t‰yttˆ‰, jotta se saadaan talteen tiedopstoon siten ett‰
-	// edelliset versiot eiv‰t mene solmuun vaikka on tullut uutta dataa.
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
+	// When new variables appear, add extra-data filling here, so that it gets stored to the file in such a way that
+	// previous versions don't get tangled up even though new data has appeared.
 
-    extraData.Add(static_cast<double>(fShowHakeMessages)); // fShowHakeMessages on 1. uusi 'double' arvo
-    extraData.Add(static_cast<double>(fShowKaHaMessages)); // fShowKaHaMessages on 2. uusi 'double' arvo
-    extraData.Add(static_cast<double>(itsMinimumTimeRangeForWarningsOnMapViewsInMinutes)); // itsMinimumTimeRangeForWarningsOnMapViewsInMinutes on 3. uusi 'double' arvo
+    // FShowHakeMessages is the 1st new 'double' value
+    extraData.Add(static_cast<double>(fShowHakeMessages));
+    // FShowKaHaMessages is the 2nd new 'double' value
+    extraData.Add(static_cast<double>(fShowKaHaMessages));
+    // ItsMinimumTimeRangeForWarningsOnMapViewsInMinutes is the 3rd new 'double' value
+    extraData.Add(static_cast<double>(itsMinimumTimeRangeForWarningsOnMapViewsInMinutes));
 
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::WarningCenterView::Write ep‰onnistui");
+		throw runtime_error("NFmiViewSettingMacro::WarningCenterView::Write ep√§onnistui");
 }
 
 void NFmiViewSettingMacro::WarningCenterView::Read(std::istream& is)
 { 
     static const std::string exceptionErrorMessage = "NFmiViewSettingMacro::WarningCenterView::Read failed";
 
-    // toivottavasti olet poistanut kommentit luettavasta streamista!!
+    // Hopefully you have removed the comments from the stream being read!!
 	is >> itsAbsolutRect;
     ::ReadMfcViewStatus(is, itsViewStatus);
 
@@ -1101,10 +1132,11 @@ void NFmiViewSettingMacro::WarningCenterView::Read(std::istream& is)
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
 	is >> extraData;
-	// T‰ss‰ sitten otetaaan extradatasta talteen uudet muuttujat, mit‰ on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, k‰sittele t‰ss‰.
+	// Here new variables that may have appeared are then taken from the extra data
+	// i.e. if there are new variables or values, handle them here.
 
     fShowHakeMessages = true;
     if(extraData.itsDoubleValues.size() >= 1)
@@ -1163,21 +1195,22 @@ void NFmiViewSettingMacro::SynopDataGridView::Write(std::ostream& os) const
 	os << "// Container<Header-Column-Widths-In-Pixels>" << endl;
 	NFmiDataStoringHelpers::WriteContainer(itsHeaderColumnWidthsInPixels, os, string(" "));
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee t‰h‰n extradatan t‰yttˆ‰, jotta se saadaan talteen tiedopstoon siten ett‰
-	// edelliset versiot eiv‰t mene solmuun vaikka on tullut uutta dataa.
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
+	// When new variables appear, add extra-data filling here, so that it gets stored to the file in such a way that
+	// previous versions don't get tangled up even though new data has appeared.
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::SynopDataGridView::Write ep‰onnistui");
+		throw runtime_error("NFmiViewSettingMacro::SynopDataGridView::Write ep√§onnistui");
 }
 
 void NFmiViewSettingMacro::SynopDataGridView::Read(std::istream& is)
 { 
     static const std::string exceptionErrorMessage = "NFmiViewSettingMacro::SynopDataGridView::Read failed";
 
-    // toivottavasti olet poistanut kommentit luettavasta streamista!!
+    // Hopefully you have removed the comments from the stream being read!!
 	is >> itsAbsolutRect;
     ::ReadMfcViewStatus(is, itsViewStatus);
 
@@ -1204,10 +1237,11 @@ void NFmiViewSettingMacro::SynopDataGridView::Read(std::istream& is)
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
 	is >> extraData;
-	// T‰ss‰ sitten otetaaan extradatasta talteen uudet muuttujat, mit‰ on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, k‰sittele t‰ss‰.
+	// Here new variables that may have appeared are then taken from the extra data
+	// i.e. if there are new variables or values, handle them here.
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
@@ -1229,18 +1263,19 @@ void NFmiViewSettingMacro::SynopPlotSettings::Write(std::ostream& os) const
 
 	os << itsSynopPlotSettings << endl;
 
-	// ei k‰ytet‰ extradata talletusta t‰ss‰, koska se on jo NFmiSynopPlotSettings-luokassa
-//	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
+	// Extra-data storage is not used here, because it is already in the NFmiSynopPlotSettings class
+// Finally, the possible extra data
+//	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::SynopPlotSettings::Write ep‰onnistui");
+		throw runtime_error("NFmiViewSettingMacro::SynopPlotSettings::Write ep√§onnistui");
 }
 
 void NFmiViewSettingMacro::SynopPlotSettings::Read(std::istream& is)
 {
 	is >> itsSynopPlotSettings;
 	if(is.fail())
-		throw runtime_error("NFmiViewSettingMacro::SynopPlotSettings::Read ep‰onnistui");
+		throw runtime_error("NFmiViewSettingMacro::SynopPlotSettings::Read ep√§onnistui");
 }
 
 NFmiViewSettingMacro::ObsComparisonInfo::ObsComparisonInfo(void)
@@ -1258,18 +1293,19 @@ void NFmiViewSettingMacro::ObsComparisonInfo::Write(std::ostream& os) const
 
 	os << itsObsComparisonInfo << endl;
 
-	// ei k‰ytet‰ extradata talletusta t‰ss‰, koska se on jo NFmiSynopPlotSettings-luokassa
-//	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
+	// Extra-data storage is not used here, because it is already in the NFmiSynopPlotSettings class
+// Finally, the possible extra data
+//	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::ObsComparisonInfo::Write ep‰onnistui");
+		throw runtime_error("NFmiViewSettingMacro::ObsComparisonInfo::Write ep√§onnistui");
 }
 
 void NFmiViewSettingMacro::ObsComparisonInfo::Read(std::istream& is)
 {
 	is >> itsObsComparisonInfo;
 	if(is.fail())
-		throw runtime_error("NFmiViewSettingMacro::ObsComparisonInfo::Read ep‰onnistui");
+		throw runtime_error("NFmiViewSettingMacro::ObsComparisonInfo::Read ep√§onnistui");
 }
 
 
@@ -1323,20 +1359,24 @@ void NFmiViewSettingMacro::Write(std::ostream& os) const
     static const std::string exceptionErrorMessage = "NFmiViewSettingMacro::Write failed";
 
 	if(fViewMacroDirectory)
-		return ; // hakemisto virityst‰ ei ole tarkoitus tallettaa
+		// The directory hack is not meant to be stored
+		return ;
 
 	os << "// NFmiViewSettingMacro::Write..." << endl;
 	os << "// version number" << endl;
-	itsCurrentVersionNumber = itsLatestVersionNumber; // aina kirjoitetaan viimeisell‰ versio numerolla
+	// Always written with the latest version number
+	itsCurrentVersionNumber = itsLatestVersionNumber;
 	os << itsCurrentVersionNumber << endl;
 	os << "// itsName" << endl;
-	// talletan itsName ja itsDescription NFmiString:ein‰, ett‰ luku ja kirjoitus menev‰t ok vaikka olisi white spaceja
+	// I store itsName and itsDescription as NFmiStrings, so that reading and writing work ok even if there are white spaces
 	NFmiString tmp1(itsName);
-	ChangePossibleComments(tmp1); // pit‰‰ korvata mahd. kommentti-merkit, koska luettaessa kommentit poistetaan ja sitten oltaisiin pulassa
+	// Must replace possible comment characters, because comments are removed when reading and then we'd be in trouble
+	ChangePossibleComments(tmp1);
 	os << tmp1;
 	os << "// Description" << endl;
 	NFmiString tmp2(itsDescription);
-	ChangePossibleComments(tmp2); // pit‰‰ korvata mahd. kommentti-merkit, koska luettaessa kommentit poistetaan ja sitten oltaisiin pulassa
+	// Must replace possible comment characters, because comments are removed when reading and then we'd be in trouble
+	ChangePossibleComments(tmp2);
 	os << tmp2;
 	os << "// GeneralDoc-settings" << endl;
 	os << itsGeneralDoc << endl;
@@ -1349,7 +1389,7 @@ void NFmiViewSettingMacro::Write(std::ostream& os) const
 	os << "// IsPrinterPortrait" << endl;
 	os << fIsPrinterPortrait << endl;
 	os << "// fUseBrushTool fUseAnalyzeTool fUseTextGenTool (removed feature legacy storage) fUseChangeSpreaderTool fUseControlPoinTool fUseAnimationTool" << endl;
-    // ViewMacrojen eteen/taaksep‰in yhteensopivuuksien takia pit‰‰ tallettaa ja lukea yksi boolean muuttuja
+    // For backward/forward compatibility of view macros, one boolean variable must be stored and read
     bool legacy_UseChangeSpreaderTool = false;
 	os << fUseBrushTool << " " << fUseAnalyzeTool << " " << false << " " << legacy_UseChangeSpreaderTool << " " << fUseControlPoinTool << " " << fUseAnimationTool << endl;
 	os << "// itsAnimationStartPosition itsAnimationEndPosition itsAnimationDelayInMS" << endl;
@@ -1359,7 +1399,7 @@ void NFmiViewSettingMacro::Write(std::ostream& os) const
 		throw runtime_error(exceptionErrorMessage);
 
 	// ************************************
-	// T‰st‰ eteenp‰in on versio 2. tavaraa
+	// From here onwards is version 2 stuff
 	// ************************************
 	os << "// Here starts View Macro version 2 stuff" << endl;
 	os << itsTrajectoryView << endl;
@@ -1378,11 +1418,11 @@ void NFmiViewSettingMacro::Write(std::ostream& os) const
 		os << itsExtraMapViewDescTops[i] << endl;
 	}
 
-    // Lopuksi viel‰ mahdollinen extra data:
-    // Kun tulee uusia muuttujia, tee t‰h‰n extradatan t‰yttˆ‰, jotta se saadaan talteen tiedopstoon siten ett‰
-    // edelliset versiot eiv‰t mene solmuun vaikka on tullut uutta dataa.
+    // Finally, the possible extra data:
+    // When new variables appear, add extra-data filling here, so that it gets stored to the file in such a way that
+    // previous versions don't get tangled up even though new data has appeared.
 	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; 
-    // KeepMapAspectRatio (F10 toiminto Smartmetissa) on siis 1. uusista double-extra-parametreista
+    // KeepMapAspectRatio (the F10 function in SmartMet) is thus the 1st of the new double extra parameters
     extraData.Add(fKeepMapAspectRatio);
 
 	os << "// possible extra data" << std::endl;
@@ -1397,7 +1437,8 @@ void NFmiViewSettingMacro::Read(std::istream& is)
 	is >> itsCurrentVersionNumber;
 	if(itsCurrentVersionNumber > itsLatestVersionNumber)
 		throw std::runtime_error("NFmiViewSettingMacro::Read failed the version number war newer than program can handle.");
-	itsOriginalLoadVersionNumber = itsCurrentVersionNumber; // laitetaan originaali versio talteen
+	// Store the original version
+	itsOriginalLoadVersionNumber = itsCurrentVersionNumber;
 
     static const std::string exceptionErrorMessage = "NFmiViewSettingMacro::Read failed";
 
@@ -1410,12 +1451,13 @@ void NFmiViewSettingMacro::Read(std::istream& is)
 	is >> itsGeneralDoc;
 	is >> itsTimeView;
 
-	itsTempView.CurrentVersionNumber(itsCurrentVersionNumber); // versio numeroa pit‰‰ jakaa eteenp‰in
+	// The version number must be passed forward
+	itsTempView.CurrentVersionNumber(itsCurrentVersionNumber);
 	is >> itsTempView;
 	is >> itsMaskSettings;
 	is >> fIsPrinterPortrait;
     bool removedLegacyUseGsmToolflag = false;
-    // ViewMacrojen eteen/taaksep‰in yhteensopivuuksien takia pit‰‰ tallettaa ja lukea yksi boolean muuttuja
+    // For backward/forward compatibility of view macros, one boolean variable must be stored and read
     bool legacy_UseChangeSpreaderTool = false;
     is >> fUseBrushTool >> fUseAnalyzeTool >> removedLegacyUseGsmToolflag >> legacy_UseChangeSpreaderTool >> fUseControlPoinTool >> fUseAnimationTool;
 	is >> itsAnimationStartPosition >> itsAnimationEndPosition >> itsAnimationDelayInMS;
@@ -1425,7 +1467,7 @@ void NFmiViewSettingMacro::Read(std::istream& is)
 
 	if(itsCurrentVersionNumber > 1.0)
 	{
-		// luetaan uudet ver 2.0 ja myˆh. jutut
+		// Read the new ver 2.0 and later stuff
 		if(is.fail())
 			throw runtime_error(exceptionErrorMessage);
 		is >> itsTrajectoryView;
@@ -1459,35 +1501,42 @@ void NFmiViewSettingMacro::Read(std::istream& is)
 
 		if(is.fail())
 			throw runtime_error(exceptionErrorMessage);
-		NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
+		// Finally, the possible extra data
+		NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
 		is >> extraData;
-		// T‰ss‰ sitten otetaaan extradatasta talteen uudet muuttujat, mit‰ on mahdollisesti tullut
-		// eli jos uusia muutujia tai arvoja, k‰sittele t‰ss‰.
+		// Here new variables that may have appeared are then taken from the extra data
+		// i.e. if there are new variables or values, handle them here.
 
-        // t‰m‰ on siis default arvo KeepMapAspectRatio (eli ‰l‰ pakota pit‰m‰‰n oikeita karttasuhteita)
+        // This is thus the default value for KeepMapAspectRatio (i.e. don't force keeping the correct map aspect ratios)
         fKeepMapAspectRatio = false;
         if(extraData.itsDoubleValues.size() >= 1)
             fKeepMapAspectRatio = extraData.itsDoubleValues[0] != 0;
     }
 	else
 	{
-		// muuten tehd‰‰n sopivia alustuksia uusiin muuttujiin
+		// Otherwise make suitable initializations for the new variables
 
-		// itsTrajectoryView ; // ‰l‰ koske trajektori-systeemiin kuitenkaan
-		// itsCrossSectionView ; // ‰l‰ koske crosssection-systeemiin kuitenkaan
-		// itsSynopPlotSettings ; // ‰l‰ koske synop-plot-asetuksiin kuitenkaan
-		// itsWarningCenterView ; // ‰l‰ koske warning-center-asetuksiin kuitenkaan
-		// itsSynopDataGridView ; // ‰l‰ koske synop-taulukko-asetuksiin kuitenkaan
+		// Don't touch the trajectory system after all
+		// itsTrajectoryView ;
+		// Don't touch the crosssection system after all
+		// itsCrossSectionView ;
+		// Don't touch the synop-plot settings after all
+		// itsSynopPlotSettings ;
+		// Don't touch the warning-center settings after all
+		// itsWarningCenterView ;
+		// Don't touch the synop-table settings after all
+		// itsSynopDataGridView ;
 	}
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
 
-	itsCurrentVersionNumber = itsLatestVersionNumber; // aina jatketaan viimeisell‰ versio numerolla
+	// Always continue with the latest version number
+	itsCurrentVersionNumber = itsLatestVersionNumber;
 }
 
-// Jos jollekin toisille n‰ytˆille halutaan viel‰ lis‰t‰ macroParam tuki, 
-// t‰h‰n pit‰‰ lis‰t‰ kyseisen n‰ytˆn macroParam polkujen alustukset.
+// If macroParam support is to be added to some other views as well,
+// the initializations of that view's macroParam paths must be added here.
 void NFmiViewSettingMacro::SetMacroParamInitFileNames(const std::string &theRootPath)
 {
 	itsTimeView.SetMacroParamInitFileNames(theRootPath);
@@ -1497,7 +1546,7 @@ void NFmiViewSettingMacro::SetMacroParamInitFileNames(const std::string &theRoot
 }
 
 // ****************************************
-// *** MapViewDescTop osio alkaa t‰st‰ ****
+// *** MapViewDescTop section starts here ****
 // ****************************************
 
 NFmiViewSettingMacro::MapViewDescTop::MapViewDescTop(void)
@@ -1541,9 +1590,9 @@ void NFmiViewSettingMacro::MapViewDescTop::SetMapViewDescTop(const NFmiMapViewDe
 	itsMapViewDescTop.InitForViewMacro(theData, theMapViewWinRegistry ,true, disableWindowManipulations);
 }
 
-// tutkii miss‰ n‰yttˆ riviss‰ on viimeiset parametrit. T‰ll‰ pyrit‰‰n s‰‰st‰m‰‰n
-// talletuksissa, ett‰ jos vaikka 3. rivin j‰lkeen ei ole parametreja, ei tallleteta tyhji‰ rivej‰ sen j‰lkeen,
-// koska tyhj‰tkin rivit viev‰t tilaa.
+// Examines which view row has the last parameters. This aims to save
+// on storage, so that if e.g. after the 3rd row there are no parameters, empty rows after that are not stored,
+// because even empty rows take up space.
 static int CalcStoredMapRowCount(const std::vector<NFmiViewSettingMacro::MapRow> &theMapRowSettings)
 {
 	size_t totalSize = theMapRowSettings.size();
@@ -1551,7 +1600,8 @@ static int CalcStoredMapRowCount(const std::vector<NFmiViewSettingMacro::MapRow>
 	for(size_t i=0; i < totalSize; i++)
 	{
 		if(theMapRowSettings[i].RowParams().size() > 0)
-			lastRowWithParams = i+1; // pit‰‰ lis‰t‰ 1, koska indeksit alkavat 0:sta
+			// Must add 1, because indices start from 0
+			lastRowWithParams = i+1;
 	}
 	return static_cast<int>(lastRowWithParams);
 }
@@ -1565,12 +1615,13 @@ void NFmiViewSettingMacro::MapViewDescTop::Write(std::ostream& os) const
     ::WriteMfcViewStatus(os, itsViewStatus) << endl;
 
 	os << "// vector<MapRow> MapRowSettings" << endl;
-    // Talletetaan rivej‰ vain niin pitk‰lle kuin sielt‰ lˆytyy jotain talletettavaa (nyt siis rivej‰ voi potentiaalisesti olla aina 50 kpl)
+    // Store rows only as far as there is something to store (so now there can potentially be up to 50 rows)
     int mapRowWriteSize = ::CalcStoredMapRowCount(itsMapRowSettings); 
     NFmiDataStoringHelpers::WriteContainer(itsMapRowSettings, os, string("\n"), mapRowWriteSize);
 
 	os << "// vector<MapRow> ExtraMapRowSettings" << endl;
-    std::vector<MapRow> emptyLegacyMapRowSettings; //  Pakko tallettaa tyhj‰ vektori n‰yttˆmakroon taaksep‰in yhteensopivuuden takia
+    // Must store an empty vector to the view macro for backward compatibility
+    std::vector<MapRow> emptyLegacyMapRowSettings;
     NFmiDataStoringHelpers::WriteContainer(emptyLegacyMapRowSettings, os, string("\n"), 0);
 
 	os << "// MapViewDescTop" << endl;
@@ -1579,26 +1630,28 @@ void NFmiViewSettingMacro::MapViewDescTop::Write(std::ostream& os) const
 	os << "// DipMapHelperList" << endl;
 	NFmiDataStoringHelpers::WriteContainer(itsDipMapHelperList, os, "\n");
 
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
-	// Kun tulee uusia muuttujia, tee t‰h‰n extradatan t‰yttˆ‰, jotta se saadaan talteen tiedopstoon siten ett‰
-	// edelliset versiot eiv‰t mene solmuun vaikka on tullut uutta dataa.
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
+	// When new variables appear, add extra-data filling here, so that it gets stored to the file in such a way that
+	// previous versions don't get tangled up even though new data has appeared.
 	os << "// possible extra data" << std::endl;
 	os << extraData;
 
 	if(os.fail())
-		throw runtime_error("NFmiViewSettingMacro::MapViewDescTop::Write ep‰onnistui");
+		throw runtime_error("NFmiViewSettingMacro::MapViewDescTop::Write ep√§onnistui");
 
 }
 
-// T‰m‰ on legacy funktio, jolla siirret‰‰n legacy-extraMapRow:iin talletetut rivit p‰‰vektoriin.
-// Jos theLegacyExtraMapRowSettings vektorissa on tavaraa, siirret‰‰n ne theMapRowSettings:in per‰‰n.
-// Jos theMapRowSettings:in koko on pienempi kuin preferredSizeAfterExtraRowsAreAppended, kasvata sen kokoa annettuun lukuun.
+// This is a legacy function that moves the rows stored in the legacy extraMapRow into the main vector.
+// If there is stuff in the theLegacyExtraMapRowSettings vector, move it to the end of theMapRowSettings.
+// If the size of theMapRowSettings is smaller than preferredSizeAfterExtraRowsAreAppended, grow its size to the given number.
 static void CombineMapRowSettings(std::vector<NFmiViewSettingMacro::MapRow> &theMapRowSettings, std::vector<NFmiViewSettingMacro::MapRow> &theLegacyExtraMapRowSettings, int preferredSizeAfterExtraRowsAreAppended)
 {
     if(theLegacyExtraMapRowSettings.size())
     {
         if(theMapRowSettings.size() > preferredSizeAfterExtraRowsAreAppended)
-            return; // T‰m‰ on joku virhetilanne, enk‰ tee mit‰‰n
+            // This is some error situation, and I do nothing
+            return;
         if(theMapRowSettings.size() < preferredSizeAfterExtraRowsAreAppended)
             theMapRowSettings.resize(preferredSizeAfterExtraRowsAreAppended);
         theMapRowSettings.insert(theMapRowSettings.end(), theLegacyExtraMapRowSettings.begin(), theLegacyExtraMapRowSettings.end());
@@ -1608,7 +1661,7 @@ static void CombineMapRowSettings(std::vector<NFmiViewSettingMacro::MapRow> &the
 void NFmiViewSettingMacro::MapViewDescTop::Read(std::istream& is)
 { 
     static const std::string exceptionErrorMessage = "NFmiViewSettingMacro::MapViewDescTop::Read failed";
-    // toivottavasti olet poistanut kommentit luettavasta streamista!!
+    // Hopefully you have removed the comments from the stream being read!!
 	is >> itsAbsolutRect;
     ::ReadMfcViewStatus(is, itsViewStatus);
     if(is.fail())
@@ -1617,7 +1670,8 @@ void NFmiViewSettingMacro::MapViewDescTop::Read(std::istream& is)
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
 
-    std::vector<MapRow> legacyExtraMapRowSettings; //  Pakko lukea n‰yttˆmakroista mahdolliset extraParamit taaksep‰in yhteensopivuuden takia
+    // Must read the possible extraParams from the view macros for backward compatibility
+    std::vector<MapRow> legacyExtraMapRowSettings;
 	NFmiDataStoringHelpers::ReadContainer(legacyExtraMapRowSettings, is);
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
@@ -1631,10 +1685,11 @@ void NFmiViewSettingMacro::MapViewDescTop::Read(std::istream& is)
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
-	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData; // lopuksi viel‰ mahdollinen extra data
+	// Finally, the possible extra data
+	NFmiDataStoringHelpers::NFmiExtraDataStorage extraData;
 	is >> extraData;
-	// T‰ss‰ sitten otetaaan extradatasta talteen uudet muuttujat, mit‰ on mahdollisesti tullut
-	// eli jos uusia muutujia tai arvoja, k‰sittele t‰ss‰.
+	// Here new variables that may have appeared are then taken from the extra data
+	// i.e. if there are new variables or values, handle them here.
 
 	if(is.fail())
 		throw runtime_error(exceptionErrorMessage);
@@ -1642,5 +1697,5 @@ void NFmiViewSettingMacro::MapViewDescTop::Read(std::istream& is)
 }
 
 // *****************************************
-// *** MapViewDescTop osio loppuu t‰h‰n ****
+// *** MapViewDescTop section ends here ****
 // *****************************************

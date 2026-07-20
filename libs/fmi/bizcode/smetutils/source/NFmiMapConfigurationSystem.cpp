@@ -13,7 +13,7 @@
 
 // ----------------------------------------------------------------------
 /*!
- *  syö spacet pois streamista ja palauttaa true:n jos ei olla lopussa
+ *  Eats the spaces out of the stream and returns true if we are not at the end
  *
  * \param theInput The input stream
  * \return Undocumented
@@ -28,7 +28,8 @@ static bool EatWhiteSpaces(std::istream & theInput)
 	}
   while(isspace(ch));
   if(theInput.fail())
-	return false; // jos stremin lopussa, epäonnistuu
+	// If at the end of the stream, it fails
+	return false;
   else
 	theInput.unget();
   return true;
@@ -43,7 +44,8 @@ NFmiMapConfiguration::~NFmiMapConfiguration() = default;
 
 void NFmiMapConfiguration::ReadFileNamesAndDrawStyles(std::istream & file, std::vector<std::string> &theFileNames, std::vector<int> &theDrawingStyles)
 {
-	const int maxBufferSize = 512; // kuinka pitkä tiedoston nimi voi olla polkuineen maksimissaan
+	// The maximum length a file name including its path can be
+	const int maxBufferSize = 512;
 	int mapCount = 0;
 	file >> mapCount;
 	std::string buffer;
@@ -62,7 +64,8 @@ void NFmiMapConfiguration::ReadFileNamesAndDrawStyles(std::istream & file, std::
 }
 void NFmiMapConfiguration::ReadProjectionFileName(std::istream & file, std::string &theFileName)
 {
-	const int maxBufferSize = 512; // kuinka pitkä tiedoston nimi voi olla polkuineen maksimissaan
+	// The maximum length a file name including its path can be
+	const int maxBufferSize = 512;
 	std::string buffer;
 	buffer.resize(maxBufferSize+1);
 	::EatWhiteSpaces(file);
@@ -104,21 +107,21 @@ static const std::string& GetLayerTextFromVector(size_t layerIndex, const std::v
 	}
 }
 
-// Priorisointi kun tehdään map-layer nimejä Gui:lle:
+// Prioritization when making map-layer names for the GUI:
 // 1. Descriptive name
 // 2. Macro-reference name
-// 3. Väännetään sopiva nimi bitmapin tiedosto nimestä
+// 3. Derive a suitable name from the bitmap's file name
 std::string NFmiMapConfiguration::GetBestGuiUsedMapLayerName(size_t layerIndex, bool backgroundMapCase) const
 {
-	// 1. Jos löytyy ei-puuttuva descriptiveName, käytetään sitä.
+	// 1. If a non-missing descriptiveName is found, use it.
 	std::string bestGuiUsedname = ::GetLayerTextFromVector(layerIndex, backgroundMapCase ? itsBackgroundMapDescriptiveNames : itsOverlayMapDescriptiveNames);
 	if(bestGuiUsedname.empty())
 	{
-		// 2. Jos löytyy ei-puuttuva macroReferenceName, käytetään sitä.
+		// 2. If a non-missing macroReferenceName is found, use it.
 		bestGuiUsedname = ::GetLayerTextFromVector(layerIndex, backgroundMapCase ? itsBackgroundMapMacroReferenceNames : itsOverlayMapMacroReferenceNames);
 		if(bestGuiUsedname.empty())
 		{
-			// 3. Muutoin tehdään nimi kuvan tiedostonimestä
+			// 3. Otherwise make a name from the image's file name
 			bestGuiUsedname = ::GetLayerTextFromVector(layerIndex, backgroundMapCase ? itsBackgroundMapFileNameBasedGuiNames : itsOverlayMapFileNameBasedGuiNames);
 		}
 	}

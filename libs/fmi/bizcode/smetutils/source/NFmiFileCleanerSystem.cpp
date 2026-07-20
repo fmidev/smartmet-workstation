@@ -22,7 +22,7 @@ void NFmiDirectorCleanerInfo::CleanDirectory(void)
 	}
 	catch(...)
 	{
-		// ei tehd‰ toistaiseksi mit‰‰n...
+		// For now, do nothing...
 	}
 }
 
@@ -34,13 +34,13 @@ void NFmiFilePatternCleanerInfo::CleanFilePattern(void)
 	}
 	catch(...)
 	{
-		// ei tehd‰ toistaiseksi mit‰‰n...
+		// For now, do nothing...
 	}
 }
 
-// theInitNameSpace on esim. "FileCleanerSystem", t‰m‰n avulla rakennetaan halutut
-// asetukset jotka puretaan konffitiedostosta. Huom per‰ss‰ ei saa olla "::" namespace
-// merkkej‰, koska ne lis‰t‰‰n. esim.
+// theInitNameSpace is e.g. "FileCleanerSystem"; with it the wanted settings are built,
+// which are parsed from the config file. Note: there must not be "::" namespace
+// characters at the end, because they are added. e.g.
 // FileCleanerSystem::CleaningTimeStepInHours = 3
 // FileCleanerSystem::DirectoryInfoCount = 2
 // FileCleanerSystem::DirectoryInfoPath_1 = c:\dir1
@@ -54,7 +54,7 @@ void NFmiFilePatternCleanerInfo::CleanFilePattern(void)
 // FileCleanerSystem::PatternInfoFileCount_2 = 6
 // FileCleanerSystem::PatternInfo_3 = c:\dir\myfile3_*.txt
 // FileCleanerSystem::PatternInfoFileCount_3 = 2
-// jne.
+// Etc.
 // throws if there is major problems. There has to certain setting found
 // or exception is thrown. But you can tell that there might be 50 as DirectoryInfoCount
 // but if only 4 is found that is ok, because now you don't have change counter in
@@ -105,7 +105,7 @@ void NFmiFileCleanerSystem::InitDirectoriesFromSettings(void)
 		const double missingAge = -9898.;
 		double maxAgeInDays = NFmiSettings::Optional(str2, missingAge);
 
-		// kaksi seuraavaa tarkistavat ett‰ jos vain toinen asetus pareista onnistuttiin initialisoimaan, sitten lent‰‰ poikkeus.
+		// The following two check that if only one of the setting pairs was successfully initialized, then an exception is thrown.
 		if(!path.empty() && maxAgeInDays == missingAge)
 			throw std::runtime_error("NFmiFileCleanerSystem::InitDirectoriesFromSettings - can't initialize setting: " + str2);
 		if(path.empty() && maxAgeInDays != missingAge)
@@ -130,7 +130,7 @@ void NFmiFileCleanerSystem::InitPatternsFromSettings(void)
 		const int missingFileCount = -9898;
 		int maxFileCount = NFmiSettings::Optional(str2, missingFileCount);
 
-		// kaksi seuraavaa tarkistavat ett‰ jos vain toinen asetus pareista onnistuttiin initialisoimaan, sitten lent‰‰ poikkeus.
+		// The following two check that if only one of the setting pairs was successfully initialized, then an exception is thrown.
 		if(!pattern.empty() && maxFileCount == missingFileCount)
 			throw std::runtime_error("NFmiFileCleanerSystem::InitPatternsFromSettings - can't initialize setting: " + str2);
 		if(pattern.empty() && maxFileCount != missingFileCount)

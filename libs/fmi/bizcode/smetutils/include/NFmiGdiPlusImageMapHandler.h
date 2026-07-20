@@ -53,8 +53,9 @@ public:
 	boost::shared_ptr<NFmiArea> TotalArea();
 	boost::shared_ptr<NFmiArea> Area();
 	bool SetMaxArea();
-	bool SetHalfArea(); // asettaa zoomin puoleksi koko alueesta ja keskelle
-	// aspectratio muodossa x/y
+	// Sets the zoom to half of the whole area and to the center
+	bool SetHalfArea();
+	// Aspect ratio in the form x/y
 	double BitmapAspectRatio();
 	double BitmapAspectRatioOverMap();
 	const NFmiRect& Position();
@@ -104,44 +105,45 @@ private:
 	void CreateMapAreaFromConfiguration();
 
 	int itsUsedMapIndex;
-	// Mitä nimi karttaa käytetään (-1 = ei mitään, 0=1. vektorissa olevaa jne.)
-	int itsUsedOverMapBitmapIndex; 
-	// Tähän läpinäkyvään 'karttaan' on laitettu eri paikkojen sijainteja ja niiden nimiä.
+	// Which named map is used (-1 = none, 0 = the 1st one in the vector, etc.)
+	int itsUsedOverMapBitmapIndex;
+	// This transparent 'map' has been filled with the locations of different places and their names.
 	std::vector<Gdiplus::Bitmap*> itsMapBitmaps;
-	// Tähän läpinäkyvään 'karttaan' on laitettu eri paikkojen sijainteja ja niiden nimiä.
-	// Tämä Bitmap on tarkoitus haluttaessa piirtää oikean kartan päälle.
+	// This transparent 'map' has been filled with the locations of different places and their names.
+	// This Bitmap is meant to be drawn on top of the actual map when desired.
 	std::vector<Gdiplus::Bitmap*> itsOverMapBitmaps;
 	boost::shared_ptr<NFmiArea> itsOriginalArea;
 	boost::shared_ptr<NFmiArea> itsZoomedArea;
 	NFmiRect itsZoomedAreaPosition;
-    // Pitääkö uusi karttapohja rakentaa syystä tai toisesta
+    // Whether a new base map needs to be built for one reason or another
 	bool fMakeNewBackgroundBitmap;
-    // Jokin jossain karttanäytön rivin parametri layer rakenteissa on muuttunut ja niitä pitää päivittää
+    // Something in some map view row's parameter layer structures has changed and they need to be updated
     bool fUpdateMapViewDrawingLayers;
-    // Tämän avulla tiedetään onko karttaa oikeasti zoomattu, edellä olevaa fMakeNewBackgroundBitmap:ä voidaan käyttää muissakin tapauksissa
-	bool fMapReallyChanged; 
-    // Smartmetin kontrollipolku (-p optio) pitää laittaa talteen, koska muuten ohjelma ei aina
-    // osaa lukea karttoja suhteellisesta polusta alkaen (tästä seurasi mustat ruudut)
-    // Tässä oli aiemmin WorkingDirectory, mutta se ei toiminut varsinkaan kun käytössä oli 
-    // KV-projektien Dropbox konfiguraatiot ja VC++ debuggerin käyttö menossa.
-    std::string itsControlPath; 
+    // This tells whether the map has really been zoomed; the above fMakeNewBackgroundBitmap can also be used in other cases
+	bool fMapReallyChanged;
+    // Smartmet's control path (-p option) must be stored, because otherwise the program cannot always
+    // read maps starting from a relative path (this resulted in black cells)
+    // This used to be WorkingDirectory, but that did not work, especially when
+    // the Dropbox configurations of international projects and the VC++ debugger were in use.
+    std::string itsControlPath;
 
-	// Nämä swap-base ja swap-back area:t on SmartMetin pika zoomi swap ominaisuutta varten.
-	// Eli halutessa käyttäjä voi tallettaa swap-base arean, johon palataan aina kun painetaan SPACE
-	// acceleraattoria. Ja kun ollaan swap-basessa, seuraavan kerran kun painetaan SPACE:a, palataan
-	// taas takaisin swap-back areaan (joka otetaan talteen aina kun on tehty 1. swap-komento).
-	// CTRL+SPACE:lla talletetaan mikä tahansa zoomi swap-base:ksi. Mikä tahansa zoomi tuhoaa
-	// swap-back:in, koska kun zoomataan ja painetaan SPACE:a, siitä tulee uusi swap-back-area.
-	boost::shared_ptr<NFmiArea> itsSwapBaseArea; // defaulttina tähän otetaan itsOriginalArea, mutta tätä voidaan päivittää milloin vain CTRL+SPACE:llea ja SwapBase-metodilla.
+	// These swap-base and swap-back areas are for SmartMet's quick zoom swap feature.
+	// I.e. if desired, the user can store a swap-base area, which is returned to whenever the SPACE
+	// accelerator is pressed. And when in swap-base, the next time SPACE is pressed, we return
+	// back to the swap-back area (which is stored whenever the 1st swap command has been made).
+	// With CTRL+SPACE any zoom is stored as the swap-base. Any zoom destroys
+	// the swap-back, because when you zoom and press SPACE, it becomes the new swap-back-area.
+	// By default itsOriginalArea is taken here, but this can be updated at any time with CTRL+SPACE and the SwapBase method.
+	boost::shared_ptr<NFmiArea> itsSwapBaseArea;
 	boost::shared_ptr<NFmiArea> itsSwapBackArea;
-	// SwapMode määrää mitä tehdään seuraavksi, kun suoritetaan SwapArea-metodi.
-	// Arvolla 0 tehdään perus swappi eli talletetaan nykyinen zoomi swap-back-areaan ja mennään swap-base-areaan.
-	// Arvolla 1 palataan takaisin swap-base:sta swap-back:iin.
-	// Aina kun tehdään mitä tahansa muita zoomeja, nollataan swapMode.
+	// SwapMode determines what is done next when the SwapArea method is executed.
+	// With value 0 a basic swap is done, i.e. the current zoom is stored to the swap-back-area and we move to the swap-base-area.
+	// With value 1 we return from swap-base back to swap-back.
+	// Whenever any other zooms are done, swapMode is reset.
 	int itsSwapMode;
 
 	NFmiCountryBorderPolylineCache itsCountryBorderPolylineCache;
-	// tähän lasketaan itsOriginalArea:n sisään menevä path kerran (GenDocissa)
+	// Here the path that goes inside itsOriginalArea is computed once (in GenDoc)
 	boost::shared_ptr<Imagine::NFmiPath> itsLandBorderPath;
 	std::shared_ptr<NFmiMapConfiguration> itsMapConfiguration;
 

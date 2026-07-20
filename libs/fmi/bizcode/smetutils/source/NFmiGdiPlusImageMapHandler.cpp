@@ -4,7 +4,8 @@
 //
 //////////////////////////////////////////////////////////////////////
 #ifdef _MSC_VER
-#pragma warning(disable : 4786) // poistaa n kpl VC++ k‰‰nt‰j‰n varoitusta (liian pitk‰ nimi >255 merkki‰ joka johtuu 'puretuista' STL-template nimist‰)
+// Removes n VC++ compiler warnings (name too long >255 characters, which is caused by 'expanded' STL template names)
+#pragma warning(disable : 4786)
 #endif
 
 #include "NFmiGdiPlusImageMapHandler.h"
@@ -62,8 +63,8 @@ static NFmiArea* MakeNewAreaClone(const boost::shared_ptr<NFmiArea>& areaPtr)
 		return nullptr;
 }
 
-// Huomioitavaa ett‰ copy-constructor ei tee t‰ydellist‰ kopioita.
-// Kopiointiin k‰ytet‰‰n sijoitus operaattoria.
+// Note that the copy constructor does not make a complete copy.
+// The assignment operator is used for copying.
 NFmiGdiPlusImageMapHandler::NFmiGdiPlusImageMapHandler(const NFmiGdiPlusImageMapHandler& other)
 	:itsUsedMapIndex(0)
 	, itsUsedOverMapBitmapIndex(0)
@@ -86,22 +87,25 @@ NFmiGdiPlusImageMapHandler::NFmiGdiPlusImageMapHandler(const NFmiGdiPlusImageMap
 	*this = other;
 }
 
-// Huomioitavaa ett‰ sijoitus operator ei tee t‰ydellist‰ kopioita.
-// Kaikkea ei voi eik‰ saa kopioida, kommentit erikoistapauksista ja syist‰ erikseen.
+// Note that the assignment operator does not make a complete copy.
+// Not everything can or may be copied; see the comments about the special cases and reasons individually.
 NFmiGdiPlusImageMapHandler& NFmiGdiPlusImageMapHandler::operator=(const NFmiGdiPlusImageMapHandler& other)
 {
 	if(this != &other)
 	{
 		itsUsedMapIndex = other.itsUsedMapIndex;
 		itsUsedOverMapBitmapIndex = other.itsUsedOverMapBitmapIndex;
-		//itsMapBitmaps // bitmap:eja ei voi kopioida, t‰m‰n alustus metodin lopussa
-		//itsOverMapBitmaps // bitmap:eja ei voi kopioida, t‰m‰n alustus metodin lopussa
+		//itsMapBitmaps // bitmaps cannot be copied, this is initialized at the end of the method
+		//itsOverMapBitmaps // bitmaps cannot be copied, this is initialized at the end of the method
 		itsOriginalArea.reset(::MakeNewAreaClone(other.itsOriginalArea));
 		itsZoomedArea.reset(::MakeNewAreaClone(other.itsZoomedArea));
 		itsZoomedAreaPosition = other.itsZoomedAreaPosition;
-		fMakeNewBackgroundBitmap = true; // Kopion j‰lkeen pakotetaan tekem‰‰n uusi karttapohja
-		fUpdateMapViewDrawingLayers = true; // Kopion j‰lkeen pakotetaan tekem‰‰n piirtopintojen p‰ivitykset
-		fMapReallyChanged = true; // Kopion j‰lkeen tehd‰‰n asiat niin kuin kartta-alue olisi todellakin muuttunut
+		// After a copy, force building a new base map
+		fMakeNewBackgroundBitmap = true;
+		// After a copy, force updating the drawing layers
+		fUpdateMapViewDrawingLayers = true;
+		// After a copy, do things as if the map area had really changed
+		fMapReallyChanged = true;
 		itsControlPath = other.itsControlPath;
 		itsSwapBaseArea.reset(::MakeNewAreaClone(other.itsSwapBaseArea));
 		itsSwapBackArea.reset(::MakeNewAreaClone(other.itsSwapBackArea));
@@ -163,7 +167,8 @@ bool NFmiGdiPlusImageMapHandler::Init(std::shared_ptr<NFmiMapConfiguration>& map
 	InitializeBitmapVectors();
 
 	const auto& mapFileNames = itsMapConfiguration->MapFileNames();
-	if(mapFileNames.size() > 0) // pakko lukea 1. image muistiin, ett‰ saadaan koko talteen
+	// Must read the 1st image into memory, in order to obtain its size
+	if(mapFileNames.size() > 0)
 	{
 		itsMapBitmaps[0] = CreateBitmapFromFile(mapFileNames[0]);
 		if(itsMapBitmaps[0] == 0)
@@ -180,7 +185,7 @@ bool NFmiGdiPlusImageMapHandler::Init(std::shared_ptr<NFmiMapConfiguration>& map
 
 void NFmiGdiPlusImageMapHandler::InitializeBitmapVectors()
 {
-	// pit‰‰ alustaa 0-pointtereilla image taulukko.
+	// The image array must be initialized with 0-pointers.
 	const auto& mapFileNames = itsMapConfiguration->MapFileNames();
 	for(auto mapIndex = 0ul; mapIndex < static_cast<int>(mapFileNames.size()); mapIndex++)
 		itsMapBitmaps.push_back(nullptr);
@@ -223,7 +228,8 @@ void NFmiGdiPlusImageMapHandler::Area(const boost::shared_ptr<NFmiArea> &newArea
 		{
 			if(itsZoomedArea == newArea)
 				return ;
-			if(newArea->TopRightLatLon() == itsZoomedArea->TopRightLatLon() &&  // t‰m‰ ehto yritt‰‰ testata, ovatko alueet samoja
+			// This condition tries to test whether the areas are the same
+			if(newArea->TopRightLatLon() == itsZoomedArea->TopRightLatLon() &&
 			   newArea->BottomLeftLatLon() == itsZoomedArea->BottomLeftLatLon())
 				return ;
 		}
@@ -232,29 +238,35 @@ void NFmiGdiPlusImageMapHandler::Area(const boost::shared_ptr<NFmiArea> &newArea
 			itsZoomedArea = boost::shared_ptr<NFmiArea>(newArea->Clone());
 		}
 		else
-		{ // pit‰‰ luoda newArea kulmia k‰ytt‰en uusi zoomattu alue original areaa k‰ytt‰en (n‰in smartmetin karttan‰yttˆ ei mene sekaisin ja piirto mahdollisesti hidastu jos on k‰ytetty skandi n‰yttˆmakroa euro smartmetissa)
+		{
+			// A new zoomed area must be created using the corners of newArea but using the original area (this way SmartMet's map view does not get confused and drawing possibly slowed down if a scandi view macro has been used in euro SmartMet)
 			string origAreaStr = itsOriginalArea->AreaStr();
 			string newAreaStr = newArea->AreaStr();
 			string::size_type pos1 = origAreaStr.find(":");
 			string::size_type pos2 = newAreaStr.find(":");
 			if(pos1 != string::npos && pos2 != string::npos)
 			{
-				string newZoomedAreaStr(origAreaStr.begin(), origAreaStr.begin()+pos1); // otetaan alkuosio (area-tyyppi) originaali areasta
-				newZoomedAreaStr += string(newAreaStr.begin()+pos2, newAreaStr.end()); // otetaan kulmapisteet uudesta alueesta
+				// Take the initial part (area type) from the original area
+				string newZoomedAreaStr(origAreaStr.begin(), origAreaStr.begin()+pos1);
+				// Take the corner points from the new area
+				newZoomedAreaStr += string(newAreaStr.begin()+pos2, newAreaStr.end());
 				boost::shared_ptr<NFmiArea> tmpArea = NFmiAreaFactory::Create(newZoomedAreaStr);
 				if(tmpArea.get() == 0)
-					return ; // jokin meni pieleen, ei tehd‰ mit‰‰n
+					// Something went wrong, do nothing
+					return ;
 				else
 				{
 					itsZoomedArea = tmpArea;
 				}
 			}
 			else
-				return ; // jokin meni pieleen, ei tehd‰ mit‰‰n
+				// Something went wrong, do nothing
+				return ;
 		}
 		CalcZoomedAreaPosition();
         SetMakeNewBackgroundBitmap(true);
-		MapReallyChanged(true); // t‰m‰ nollataan zoom-dialogissa!!!! ks. NFmiZoomView::Update -metodi
+		// This is reset in the zoom dialog!!!! see the NFmiZoomView::Update method
+		MapReallyChanged(true);
 		itsSwapMode = 0;
 	}
 }
@@ -286,7 +298,7 @@ void NFmiGdiPlusImageMapHandler::CalcZoomedAreaPosition()
 {
 	if(itsOriginalArea && itsZoomedArea)
 	{
-		// lasketaan myˆs t‰m‰ suhteellinen zoomattu alue
+		// Also compute this relative zoomed area
         itsZoomedAreaPosition = itsOriginalArea->XYArea(itsZoomedArea.get());
 	}
 }
@@ -305,7 +317,7 @@ bool NFmiGdiPlusImageMapHandler::SetMaxArea()
 	return true;
 }
 
-// asettaa zoomin puoleksi koko alueesta ja keskelle
+// Sets the zoom to half of the whole area and to the center
 bool NFmiGdiPlusImageMapHandler::SetHalfArea()
 {
 	NFmiRect halfRect(0,0,0.5,0.5);
@@ -471,7 +483,8 @@ static std::string MakeAbsoluteFileName(const std::string &theFileName, const st
 			throw std::runtime_error(errMsg);
 		}
 		finalFileName = thePath;
-		finalFileName += kFmiDirectorySeparator; // pakko lis‰t‰ editorin tyˆhakemisto suhteelliseen tiedostonimeen, koska oletus hakemisto on saattanut muuttua esim. makro tallennuksissa jne.
+		// The editor's working directory must be added to the relative file name, because the default directory may have changed e.g. during macro saves etc.
+		finalFileName += kFmiDirectorySeparator;
 	}
 	finalFileName += theFileName;
 	return finalFileName;
@@ -553,12 +566,15 @@ void NFmiGdiPlusImageMapHandler::SwapArea()
 	if(itsSwapMode == 0)
 	{
 		itsSwapBackArea = boost::shared_ptr<NFmiArea>(itsZoomedArea->Clone());
-		Area(itsSwapBaseArea); // zoomataan swap-baseen
-		itsSwapMode = 1; // t‰m‰ pit‰‰ asettaa Area-metodin j‰lkeen
+		// Zoom to the swap-base
+		Area(itsSwapBaseArea);
+		// This must be set after the Area method
+		itsSwapMode = 1;
 	}
 	else
 	{
-		Area(itsSwapBackArea); // zoomataan swap-back:iin takaisin, swap-mode asetetaan Area-metodissa
+		// Zoom back to the swap-back, swap-mode is set in the Area method
+		Area(itsSwapBackArea);
 	}
 }
 
@@ -577,13 +593,13 @@ void NFmiGdiPlusImageMapHandler::DrawBorderPolyLineListGdiplus(std::list<std::ve
 	itsCountryBorderPolylineCache.drawBorderPolyLineListGdiplus(std::move(newValue));
 }
 
-// Laitoin karttojen likaus systeemit uusiksi monellakin tapaa:
-// 1. Nimi muuttui toivottavasti kuvaavammaksi eli MakeNewBackgroundBitmap, eli se tarkoittaa
-//    ett‰ seuraavalla piirrooskierroksella karttapohjat pit‰‰ piirt‰‰ uusiksi.
-// 2. Ns. set-funktiolla voi lipun laittaa vain p‰‰lle, false arvo j‰tet‰‰n huomiotta. Vain clear-funktiolla
-//    lipun tila voidaan nollata. T‰m‰ muutos siksi ett‰ eri paikoista voi tulla samalla likaus kerralla eri arvoja
-//    eik‰ toisaalta tehdyst‰ false asetuksesta ei haluta nollata toisesta tehty‰ true asetusta.
-// 3. Lippu siis nollataan clear-funktiolla, jota kutsutaan piirto toimintojen j‰lkeen.
+// I reworked the map dirtying systems in several ways:
+// 1. The name changed, hopefully to a more descriptive one, i.e. MakeNewBackgroundBitmap, meaning
+//    that on the next drawing round the base maps must be redrawn.
+// 2. The so-called set function can only turn the flag on; a false value is ignored. Only the clear function
+//    can reset the flag's state. This change is because different places may provide different values in the same dirtying round,
+//    and on the other hand a false setting made in one place should not reset a true setting made in another.
+// 3. The flag is thus reset with the clear function, which is called after the drawing operations.
 bool NFmiGdiPlusImageMapHandler::MakeNewBackgroundBitmap() const 
 { 
     return fMakeNewBackgroundBitmap; 
@@ -600,7 +616,7 @@ void NFmiGdiPlusImageMapHandler::ClearMakeNewBackgroundBitmap()
     fMakeNewBackgroundBitmap = false; 
 }
 
-// Sama kysely, asetus ja nollaus mekanismi kuin MakeNewBackgroundBitmap -lipullekin
+// The same query, set and reset mechanism as for the MakeNewBackgroundBitmap flag
 bool NFmiGdiPlusImageMapHandler::UpdateMapViewDrawingLayers() const
 {
     return fUpdateMapViewDrawingLayers;
@@ -617,8 +633,8 @@ void NFmiGdiPlusImageMapHandler::ClearUpdateMapViewDrawingLayers()
     fUpdateMapViewDrawingLayers = false;
 }
 
-// Uusi border-draw-dirty systeemi ei laita lippuja p‰‰lle, vaan tyhjent‰‰ tarvittavat cachet
-// jotta seuraavalla piirto kerralla on pakko tehd‰ tˆit‰.
+// The new border-draw-dirty system does not set flags on, but clears the necessary caches
+// so that on the next drawing round work has to be done.
 void NFmiGdiPlusImageMapHandler::SetBorderDrawDirtyState(CountryBorderDrawDirtyState newState)
 {
 	itsCountryBorderPolylineCache.setBorderDrawDirtyState(newState);
@@ -665,9 +681,9 @@ static int FindMapLayerTextFromVector(const std::string& layerName, const std::v
 	}
 }
 
-// xxxFromViewMacro metodien hakujen priorisointi:
-// 1. Jos annettu referenceName lˆytyy xxxMacroReferenceNames vektorista, k‰ytet‰‰n sen indeksi‰
-// 2. Muuten k‰ytet‰‰n suoraan annettua mapLayerIndex:ia
+// Prioritization of the searches in the xxxFromViewMacro methods:
+// 1. If the given referenceName is found in the xxxMacroReferenceNames vector, use its index
+// 2. Otherwise use the given mapLayerIndex directly
 void NFmiGdiPlusImageMapHandler::SelectBackgroundMapFromViewMacro(const std::string& referenceName, int mapLayerIndex)
 {
 	auto referenceNameIndex = ::FindMapLayerTextFromVector(referenceName, itsMapConfiguration->BackgroundMapMacroReferenceNames());
@@ -686,10 +702,10 @@ void NFmiGdiPlusImageMapHandler::SelectOverlayMapFromViewMacro(const std::string
 		OverMapBitmapIndex(mapLayerIndex);
 }
 
-// xxxFromGui metodien hakujen priorisointi:
-// 1. Etsit‰‰n lˆytyykˆ name:a xxxMapDescriptiveNames vektorista
-// 2. Etsit‰‰n lˆytyykˆ name:a xxxMapMacroReferenceNames vektorista
-// 3. Etsit‰‰n lˆytyykˆ name:a xxxMapFileNameBasedReferenceNames vektorista
+// Prioritization of the searches in the xxxFromGui methods:
+// 1. Search whether name is found in the xxxMapDescriptiveNames vector
+// 2. Search whether name is found in the xxxMapMacroReferenceNames vector
+// 3. Search whether name is found in the xxxMapFileNameBasedReferenceNames vector
 bool NFmiGdiPlusImageMapHandler::SelectBackgroundMapFromGui(const std::string& name)
 {
 	auto foundMapLayerIndex = ::FindMapLayerTextFromVector(name, itsMapConfiguration->BackgroundMapDescriptiveNames());
