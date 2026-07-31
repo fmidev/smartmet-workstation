@@ -89,6 +89,11 @@ set(
     )
 
 # **** OpenSSL library section ****
+# Windows only: on Linux find_package(OpenSSL) locates the system OpenSSL.
+# Presetting the OPENSSL_* cache variables here would make FindOpenSSL skip
+# detection and build OpenSSL::SSL with a non-existent libs/3rd path.
+if(NOT UNIX)
+
 set(
     OPENSSL_VERSION
     3_5_2
@@ -119,6 +124,8 @@ set(
     ${OPENSSL_LIB_DIR}/libssl.lib
     CACHE INTERNAL "" FORCE
     )
+
+endif() # NOT UNIX
 
 # **** Uniras library section ****
 if(NOT DISABLE_UNIRAS_TOOLMASTER)
