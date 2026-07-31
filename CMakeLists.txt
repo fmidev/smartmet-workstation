@@ -171,6 +171,8 @@ if(UNIX)
             ${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform/qt_main_window.h
             ${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform/weather_renderer.cpp
             ${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform/weather_renderer.h
+            ${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform/help_data_loader.cpp
+            ${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform/help_data_loader.h
         )
         target_include_directories(SmartMetQt
             PUBLIC ${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform

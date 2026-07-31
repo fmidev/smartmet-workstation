@@ -38,9 +38,12 @@ Output binary: `build_linux/runtime_output/SmartMet`
 # With real querydata
 ./build_linux/runtime_output/SmartMet --data path/to/file.sqd
 
-# With control directory
+# With control directory (loads the querydata listed in its helpdatainfo config)
 ./build_linux/runtime_output/SmartMet -p control_linux
 ```
+
+Keyboard navigation in the running application: ←/→ time step, ↑/↓ parameter,
+PgUp/PgDn level, N/P loaded data.
 
 ### Windows
 
@@ -63,6 +66,8 @@ Critical directory for the Linux port. Contains:
 - `registry_value_linux.h` — File-based settings replacing Windows registry
 - `qt_main_window.{h,cpp}` — Qt6 backing-store window with QPainter
 - `weather_renderer.{h,cpp}` — Cairo/Trax-based isoline and color grid rendering
+- `help_data_loader.{h,cpp}` — loads the querydata the control directory's
+  `MetEditor::HelpData` settings list (the Windows help data loading threads' stand-in)
 - `cairo_qt_bridge.h` — Cairo surface to QImage conversion
 
 ### Source organization

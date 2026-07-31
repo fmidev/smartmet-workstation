@@ -62,6 +62,11 @@ void NFmiBasicSmartMetConfigurations::DoInitializationAbortMessageBox(const std:
 #ifndef UNIX
     int usedIcon = ::GetUsedMessageBoxIcon(CatLog::Severity::Critical);
     ::MessageBox(AfxGetMainWnd()->GetSafeHwnd(), CA2T(finalErrorString.c_str()), CA2T(titleString.c_str()), MB_OK | usedIcon);
+#else
+    // These errors happen before the logger is initialized, so CatLog alone leaves the
+    // Linux startup failing silently.
+    fprintf(stderr, "Initialization error [%s]: %s\n", titleString.c_str(), errorString.c_str());
+    fflush(stderr);
 #endif
     if(throwAbortException)
     {
