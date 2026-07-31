@@ -77,6 +77,25 @@ Critical directory for the Linux port. Contains:
 - `help_data_loader.{h,cpp}` — loads the querydata the control directory's
   `MetEditor::HelpData` settings list (the Windows help data loading threads' stand-in)
 - `cairo_qt_bridge.h` — Cairo surface to QImage conversion
+- `qt_application_interface.{h,cpp}` — `ApplicationInterface` implementation the document
+  calls back into (the Qt counterpart of `ApplicationInterfaceForSmartMet`)
+- `qt_document_view.{h,cpp}` — hosts SmartMet's real `NFmiEditMapView` on a QPainter
+- `linux_view_stubs.cpp` — placeholder definitions for view-stack symbols whose bodies
+  are inside `#ifndef UNIX` blocks; each logs once when hit
+
+### Bringing up the real view stack (`--document`)
+
+`NFmiEditMapGeneralDataDoc::Init()` runs on Linux and the Qt shell can host it, but the
+real map view cannot be created yet. `NFmiEditMapView`'s constructor immediately does
+`GetCtrlViewDocumentInterface()->GetMapHandlerInterface(index)->Area()->XYArea()`, and
+`CtrlViewDocumentInterfaceForGeneralDataDoc::GetMapHandlerInterface` returns `nullptr`
+on Linux (`CtrlViewDocumentInterfaceForGeneralDataDoc.cpp:275`). It returns a
+`GdiPlusMapHandlerInterface` wrapping `NFmiGdiPlusImageMapHandler`, and both are among
+the `GdiPlus*` sources that `libs/fmi/bizcode/smetutils/CMakeLists.txt` excludes on
+Linux — about 900 lines that own the map projection, background map bitmap and zooming.
+
+Porting that map handler is the next blocking step. `--document` brings the document up
+and reports this rather than crashing; the standalone renderer keeps drawing.
 
 Note the image formats: Cairo's `ARGB32` is premultiplied and maps to
 `QImage::Format_ARGB32_Premultiplied`, but `renderColorGrid()` takes plain ARGB from its

@@ -5,9 +5,13 @@
 
 #ifdef UNIX
 
+#include "qt_application_interface.h"
+#include "qt_document_view.h"
 #include "qt_main_window.h"
+#include "qt_map_view.h"
 #include "weather_data_model.h"
 #include "NFmiBasicSmartMetConfigurations.h"
+#include "NFmiEditMapGeneralDataDoc.h"
 #include "NFmiSettings.h"
 #include "ToolMasterHelperFunctions.h"
 #include "catlog/catlog.h"
@@ -18,6 +22,8 @@
 #include <QCommandLineParser>
 #include <filesystem>
 #include <iostream>
+#include <map>
+#include <memory>
 #include <string>
 
 namespace
@@ -44,6 +50,46 @@ namespace
                 return std::filesystem::absolute(path, ec).string();
         }
         return "";
+    }
+
+    // The real SmartMet document. Only created when --document is given: bringing it up
+    // on Linux is work in progress, and the Qt window does not render its views yet.
+    std::unique_ptr<NFmiEditMapGeneralDataDoc> gGeneralDataDoc;
+    DocumentMapView gDocumentMapView;
+
+    // Returns true if the document initialized. Reports what happened either way -
+    // this is the entry point the rest of the view stack hangs off.
+    bool initGeneralDataDoc()
+    {
+        // The document calls back into the application through ApplicationInterface,
+        // so the implementation must be installed before Init().
+        QtApplicationInterface::install();
+
+        try
+        {
+            // The popup menu command id range is a Windows resource concept; the Qt port
+            // has no menu resources, so start from a value that cannot clash with them.
+            gGeneralDataDoc = std::make_unique<NFmiEditMapGeneralDataDoc>(40000);
+
+            std::map<std::string, std::string> mapViewPositions;
+            std::map<std::string, std::string> otherViewPositions;
+            const bool ok = gGeneralDataDoc->Init(gBasicSmartMetConfigurations,
+                                                  mapViewPositions, otherViewPositions);
+            std::cerr << "Document init " << (ok ? "succeeded" : "returned false") << std::endl;
+            if(!ok)
+                gGeneralDataDoc.reset();
+            return ok;
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << "Document init exception: " << e.what() << std::endl;
+        }
+        catch(...)
+        {
+            std::cerr << "Document init: unknown exception" << std::endl;
+        }
+        gGeneralDataDoc.reset();
+        return false;
     }
 
     void initSettings()
@@ -75,6 +121,7 @@ int main(int argc, char* argv[])
     parser.addOption({{"p", "control-path"}, "Control directory path", "path"});
     parser.addOption({{"d", "data"}, "Path to a .sqd querydata file to load", "file"});
     parser.addOption({{"v", "verbose"}, "Enable verbose logging"});
+    parser.addOption({"document", "Experimental: bring up the real SmartMet document"});
     parser.process(app);
 
     // Pin the data file down while the original working directory is still current:
@@ -129,6 +176,14 @@ int main(int argc, char* argv[])
     if(parser.isSet("verbose"))
         gBasicSmartMetConfigurations.Verbose(true);
 
+    if(parser.isSet("document"))
+    {
+        if(!configOk)
+            std::cerr << "--document needs a working control directory configuration" << std::endl;
+        else
+            initGeneralDataDoc();
+    }
+
     // An explicit --data file comes first, so it is the one shown at startup.
     if(!dataPath.empty())
     {
@@ -154,6 +209,25 @@ int main(int argc, char* argv[])
     std::cerr << std::endl;
 
     SmartMetMainWindow mainWindow(gDataModel);
+
+    // With --document, let SmartMet's own map view draw the canvas. It tears itself
+    // down on the first failure, after which the standalone renderer takes over.
+    if(gGeneralDataDoc && !gDocumentMapView.create(0))
+        std::cerr << "Real map view not available: " << gDocumentMapView.lastError()
+                  << "\nUsing the standalone renderer instead." << std::endl;
+
+    if(gDocumentMapView.isReady())
+    {
+        mainWindow.mapView()->setDocumentRenderer(
+            [](QPainter& painter, int width, int height) -> bool
+            {
+                gDocumentMapView.setViewSize(width, height);
+                return gDocumentMapView.draw(painter);
+            });
+        QtApplicationInterface::install().setRepaintCallback(
+            [&mainWindow]() { mainWindow.mapView()->refresh(); });
+    }
+
     mainWindow.show();
 
     CatLog::logMessage("SmartMet Linux main window shown", CatLog::Severity::Info, CatLog::Category::Configuration, true);

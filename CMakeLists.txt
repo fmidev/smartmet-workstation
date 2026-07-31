@@ -160,6 +160,14 @@ if(UNIX)
     # (bug in smartmet-library-smarttools package). -fpermissive allows it to compile.
     add_compile_options(-fpermissive)
 
+    # NFmiGlobals.h pulls in boost/math/special_functions/fpclassify.hpp, which brings
+    # math_fwd.hpp along. That only *declares* boost::math::iround, so the many call
+    # sites across the business logic compile but fail to link. Force the definition
+    # into every C++ translation unit instead of chasing individual call sites.
+    add_compile_options(
+        $<$<COMPILE_LANGUAGE:CXX>:-include>
+        $<$<COMPILE_LANGUAGE:CXX>:boost/math/special_functions/round.hpp>)
+
     # Qt6: build the SmartMetQt platform library (backing-store window, QPainter wrappers)
     if(Qt6_FOUND)
         find_package(PkgConfig REQUIRED)

@@ -190,6 +190,13 @@ namespace CtrlView
         lastLegendRelativeBottomRightCornerInOut = relativeLegendRect.BottomRight();
     }
 
+}
+#endif // UNIX
+
+// Pure geometry, needed by the map view on every platform, so it lives outside the
+// Windows-only block above.
+namespace CtrlView
+{
     // xyArea sisältää suhteellisen kartan alueen, joka voi olla 0,0 - 1,1 (kartta peittää koko näytön ilman
     // aikakontrolli-ikkunaa) tai esim. 0, 0 - 0.5, 0.46 (karttanäytöllä 2x2 ruudukko ja aikakontrolli-ikkuna vie
     // näytön alaosan).
@@ -206,4 +213,3 @@ namespace CtrlView
         return NFmiPoint(x, y);
     }
 }
-#endif // UNIX

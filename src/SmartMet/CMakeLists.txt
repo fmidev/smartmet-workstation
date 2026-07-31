@@ -8,8 +8,16 @@ if(UNIX)
         return()
     endif()
 
+    # qt_application_interface bridges the document to the Qt window. It lives with the
+    # other platform sources but is compiled here, because SmartMetQt is configured
+    # before the business logic libraries publish their include directories.
     add_executable(${PROJECT_NAME}
         main_linux.cpp
+        ${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform/qt_application_interface.cpp
+        ${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform/qt_application_interface.h
+        ${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform/qt_document_view.cpp
+        ${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform/qt_document_view.h
+        ${CMAKE_SOURCE_DIR}/libs/fmi/bizcode/platform/linux_view_stubs.cpp
     )
 
     target_link_libraries(${PROJECT_NAME}

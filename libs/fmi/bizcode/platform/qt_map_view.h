@@ -10,6 +10,8 @@
 #include <QPainter>
 #include <QWidget>
 
+#include <functional>
+
 class WeatherDataModel;
 
 class SmartMetMapView : public QWidget
@@ -30,6 +32,14 @@ public:
     void setLegendVisible(bool visible);
     bool legendVisible() const { return legendVisible_; }
 
+    // Lets SmartMet's real map view draw the canvas instead of the standalone renderer.
+    // The callback gets the painter and the canvas size and returns true if it drew.
+    // Kept as a callback so this widget does not have to know about the document stack.
+    void setDocumentRenderer(std::function<bool(QPainter&, int, int)> renderer)
+    {
+        documentRenderer_ = std::move(renderer);
+    }
+
 signals:
     // Formatted "64.20°N 27.50°E   1013.40 Pressure" readout, empty when off the data.
     void cursorReadout(const QString& text);
@@ -48,6 +58,7 @@ private:
 
     WeatherDataModel& model_;
     QImage backingImage_;
+    std::function<bool(QPainter&, int, int)> documentRenderer_;
     bool demoMode_ = false;
     bool legendVisible_ = true;
 };

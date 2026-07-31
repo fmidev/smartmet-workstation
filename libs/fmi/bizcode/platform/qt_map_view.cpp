@@ -119,10 +119,18 @@ void SmartMetMapView::refresh()
     painter.setRenderHint(QPainter::TextAntialiasing, true);
     painter.fillRect(backingImage_.rect(), QColor(240, 240, 245));
 
-    if(demoMode_)
-        drawDemo(painter);
-    else
-        drawModel(painter);
+    // SmartMet's real map view takes precedence when it is up and drawing
+    bool drawnByDocument = false;
+    if(documentRenderer_)
+        drawnByDocument = documentRenderer_(painter, backingImage_.width(), backingImage_.height());
+
+    if(!drawnByDocument)
+    {
+        if(demoMode_)
+            drawDemo(painter);
+        else
+            drawModel(painter);
+    }
 
     painter.end();
     update();
