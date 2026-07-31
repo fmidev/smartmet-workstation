@@ -42,8 +42,11 @@ Output binary: `build_linux/runtime_output/SmartMet`
 ./build_linux/runtime_output/SmartMet -p control_linux
 ```
 
-Keyboard navigation in the running application: ←/→ time step, ↑/↓ parameter,
-PgUp/PgDn level, N/P loaded data.
+The window has a menu bar, a toolbar with parameter/level/time combo boxes, a dock
+listing the loaded data and their parameters, and a status bar with the cursor lat/lon
+and value readout. Keyboard navigation (also in the Data menu): ←/→ time step, ↑/↓
+parameter, PgUp/PgDn level, N/P loaded data. These shortcuts are scoped to the map view
+so they do not steal the arrow keys from the tree and the combo boxes.
 
 ### Windows
 
@@ -64,11 +67,21 @@ Critical directory for the Linux port. Contains:
 - `linux_compat.h` — Windows type stubs and compatibility macros
 - `gdiplus_stub.h` — GDI+ API stubs for Linux compilation
 - `registry_value_linux.h` — File-based settings replacing Windows registry
-- `qt_main_window.{h,cpp}` — Qt6 backing-store window with QPainter
+- `qt_main_window.{h,cpp}` — `QMainWindow` with menu bar, navigation toolbar, data dock
+  and status bar (the Linux counterpart of the MFC `CMainFrame`)
+- `qt_map_view.{h,cpp}` — the map canvas: QImage backing store, legend overlay and the
+  cursor lat/lon + value readout
+- `weather_data_model.{h,cpp}` — Qt-free view state: which data/parameter/level/time is
+  shown and the grid extracted for it. The window and `main()` share this one object
 - `weather_renderer.{h,cpp}` — Cairo/Trax-based isoline and color grid rendering
 - `help_data_loader.{h,cpp}` — loads the querydata the control directory's
   `MetEditor::HelpData` settings list (the Windows help data loading threads' stand-in)
 - `cairo_qt_bridge.h` — Cairo surface to QImage conversion
+
+Note the image formats: Cairo's `ARGB32` is premultiplied and maps to
+`QImage::Format_ARGB32_Premultiplied`, but `renderColorGrid()` takes plain ARGB from its
+colour function and must use non-premultiplied `QImage::Format_ARGB32`. Querydata grid
+row 0 is the southernmost, so the renderer flips the vertical axis to draw north up.
 
 ### Source organization
 

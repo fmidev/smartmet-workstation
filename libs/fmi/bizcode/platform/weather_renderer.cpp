@@ -63,9 +63,11 @@ double scaleX(double gridX, int gridWidth, int imageWidth)
     return gridX * (imageWidth - 1.0) / (gridWidth - 1.0);
 }
 
+// Querydata grid row 0 is the southernmost one, image row 0 is at the top, so the
+// vertical axis is flipped to draw the map with north up.
 double scaleY(double gridY, int gridHeight, int imageHeight)
 {
-    return gridY * (imageHeight - 1.0) / (gridHeight - 1.0);
+    return (gridHeight - 1.0 - gridY) * (imageHeight - 1.0) / (gridHeight - 1.0);
 }
 
 // Draw a polyline on a Cairo context, scaling from grid to image coords
@@ -244,7 +246,10 @@ QImage renderColorGrid(
     int imageWidth, int imageHeight,
     std::function<unsigned int(float)> colorFunc)
 {
-    QImage image(imageWidth, imageHeight, QImage::Format_ARGB32_Premultiplied);
+    // colorFunc returns plain (non-premultiplied) ARGB, so the image must not be a
+    // premultiplied one - writing 0xC0RRGGBB with RGB above the alpha into a
+    // premultiplied buffer produces badly distorted colours.
+    QImage image(imageWidth, imageHeight, QImage::Format_ARGB32);
     image.fill(Qt::transparent);
 
     // Simple nearest-neighbor mapping from image pixels to grid values
@@ -253,11 +258,12 @@ QImage renderColorGrid(
         auto* scanline = reinterpret_cast<unsigned int*>(image.scanLine(iy));
         for(int ix = 0; ix < imageWidth; ++ix)
         {
-            // Map image pixel to grid coordinate
+            // Map image pixel to grid coordinate. Grid row 0 is the southernmost one and
+            // image row 0 is at the top, so the vertical axis is flipped here.
             int gx = static_cast<int>(std::round(static_cast<double>(ix) * (gridWidth - 1) / (imageWidth - 1)));
             int gy = static_cast<int>(std::round(static_cast<double>(iy) * (gridHeight - 1) / (imageHeight - 1)));
             gx = std::clamp(gx, 0, gridWidth - 1);
-            gy = std::clamp(gy, 0, gridHeight - 1);
+            gy = gridHeight - 1 - std::clamp(gy, 0, gridHeight - 1);
 
             float value = gridValues[gy * gridWidth + gx];
             if(std::isfinite(value))
