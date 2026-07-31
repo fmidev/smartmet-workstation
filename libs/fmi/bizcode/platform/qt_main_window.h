@@ -76,6 +76,7 @@ private:
     QAction* prevParamAction_ = nullptr;
     QAction* nextLevelAction_ = nullptr;
     QAction* prevLevelAction_ = nullptr;
+    QAction* resetZoomAction_ = nullptr;
     QAction* legendAction_ = nullptr;
     QAction* dockAction_ = nullptr;
     QAction* aboutAction_ = nullptr;

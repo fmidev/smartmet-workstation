@@ -45,6 +45,8 @@ SmartMetMainWindow::SmartMetMainWindow(WeatherDataModel& model, QWidget* parent)
 
     connect(mapView_, &SmartMetMapView::cursorReadout,
             this, &SmartMetMainWindow::onCursorReadout);
+    connect(mapView_, &SmartMetMapView::viewChanged,
+            this, &SmartMetMainWindow::updateStatusInfo);
 
     resize(1200, 800);
     rebuildDataTree();
@@ -94,6 +96,13 @@ void SmartMetMainWindow::createActions()
     prevLevelAction_ = makeNavigationAction("Previous le&vel", QKeySequence(Qt::Key_PageDown),
                                             &SmartMetMainWindow::onPrevLevel);
 
+    resetZoomAction_ = new QAction("&Reset zoom", this);
+    resetZoomAction_->setShortcut(QKeySequence(Qt::Key_R));
+    resetZoomAction_->setShortcutContext(Qt::WidgetWithChildrenShortcut);
+    connect(resetZoomAction_, &QAction::triggered, this,
+            [this]() { mapView_->resetZoom(); });
+    mapView_->addAction(resetZoomAction_);
+
     legendAction_ = new QAction("Show &legend", this);
     legendAction_->setCheckable(true);
     legendAction_->setChecked(true);
@@ -131,6 +140,8 @@ void SmartMetMainWindow::createMenus()
     dataMenu->addAction(nextLevelAction_);
 
     QMenu* viewMenu = menuBar()->addMenu("&View");
+    viewMenu->addAction(resetZoomAction_);
+    viewMenu->addSeparator();
     viewMenu->addAction(legendAction_);
     viewMenu->addAction(dockAction_);
 
@@ -310,7 +321,11 @@ void SmartMetMainWindow::updateStatusInfo()
         return;
     }
 
-    infoLabel_->setText(QString("Data %1/%2   Grid %3x%4   %5")
+    const QString zoomText = mapView_->isZoomed()
+        ? QString("   Zoom %1x").arg(mapView_->zoomFactor(), 0, 'f', 1)
+        : QString();
+
+    infoLabel_->setText(QString("Data %1/%2   Grid %3x%4   %5%6")
         .arg(model_.currentDataIndex() + 1)
         .arg(model_.dataCount())
         .arg(model_.gridWidth())
@@ -319,7 +334,8 @@ void SmartMetMainWindow::updateStatusInfo()
                 ? QString("Range [%1, %2]")
                       .arg(static_cast<double>(model_.dataMin()), 0, 'f', 1)
                       .arg(static_cast<double>(model_.dataMax()), 0, 'f', 1)
-                : QString("no values")));
+                : QString("no values"))
+        .arg(zoomText));
 }
 
 void SmartMetMainWindow::onOpenData()

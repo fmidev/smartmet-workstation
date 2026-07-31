@@ -57,17 +57,24 @@ public:
     }
 };
 
-// Scale grid coordinates to image pixel coordinates
-double scaleX(double gridX, int gridWidth, int imageWidth)
+// Scale grid coordinates to image pixel coordinates, mapping the visible portion of
+// the grid (view) onto the whole image.
+double scaleX(double gridX, int gridWidth, int imageWidth, const WeatherRenderer::GridView& view)
 {
-    return gridX * (imageWidth - 1.0) / (gridWidth - 1.0);
+    const double u = gridWidth > 1 ? gridX / (gridWidth - 1.0) : 0.0;
+    const double span = view.u1 - view.u0;
+    if(span == 0.0) return 0.0;
+    return (u - view.u0) / span * (imageWidth - 1.0);
 }
 
 // Querydata grid row 0 is the southernmost one, image row 0 is at the top, so the
 // vertical axis is flipped to draw the map with north up.
-double scaleY(double gridY, int gridHeight, int imageHeight)
+double scaleY(double gridY, int gridHeight, int imageHeight, const WeatherRenderer::GridView& view)
 {
-    return (gridHeight - 1.0 - gridY) * (imageHeight - 1.0) / (gridHeight - 1.0);
+    const double v = gridHeight > 1 ? 1.0 - gridY / (gridHeight - 1.0) : 0.0;
+    const double span = view.v1 - view.v0;
+    if(span == 0.0) return 0.0;
+    return (v - view.v0) / span * (imageHeight - 1.0);
 }
 
 // Draw a polyline on a Cairo context, scaling from grid to image coords
@@ -75,19 +82,20 @@ void drawPolyline(cairo_t* cr,
                   const std::vector<double>& xcoords,
                   const std::vector<double>& ycoords,
                   int gridWidth, int gridHeight,
-                  int imageWidth, int imageHeight)
+                  int imageWidth, int imageHeight,
+                  const WeatherRenderer::GridView& view)
 {
     if(xcoords.size() < 2) return;
 
     cairo_move_to(cr,
-        scaleX(xcoords[0], gridWidth, imageWidth),
-        scaleY(ycoords[0], gridHeight, imageHeight));
+        scaleX(xcoords[0], gridWidth, imageWidth, view),
+        scaleY(ycoords[0], gridHeight, imageHeight, view));
 
     for(size_t i = 1; i < xcoords.size(); ++i)
     {
         cairo_line_to(cr,
-            scaleX(xcoords[i], gridWidth, imageWidth),
-            scaleY(ycoords[i], gridHeight, imageHeight));
+            scaleX(xcoords[i], gridWidth, imageWidth, view),
+            scaleY(ycoords[i], gridHeight, imageHeight, view));
     }
 }
 
@@ -112,7 +120,8 @@ QImage renderIsolines(
     int imageWidth, int imageHeight,
     const std::vector<double>& isoValues,
     unsigned int lineColor,
-    double lineWidth)
+    double lineWidth,
+    const GridView& view)
 {
     // Create Cairo surface
     cairo_surface_t* surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, imageWidth, imageHeight);
@@ -149,7 +158,7 @@ QImage renderIsolines(
         {
             auto xcoords = polyline.xcoordinates();
             auto ycoords = polyline.ycoordinates();
-            drawPolyline(cr, xcoords, ycoords, gridWidth, gridHeight, imageWidth, imageHeight);
+            drawPolyline(cr, xcoords, ycoords, gridWidth, gridHeight, imageWidth, imageHeight, view);
             cairo_stroke(cr);
         }
     }
@@ -167,7 +176,8 @@ QImage renderIsobands(
     int gridWidth, int gridHeight,
     int imageWidth, int imageHeight,
     const std::vector<std::pair<double, double>>& limits,
-    const std::vector<unsigned int>& colors)
+    const std::vector<unsigned int>& colors,
+    const GridView& view)
 {
     cairo_surface_t* surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, imageWidth, imageHeight);
     cairo_t* cr = cairo_create(surface);
@@ -203,12 +213,12 @@ QImage renderIsobands(
             if(xcoords.size() >= 3)
             {
                 cairo_move_to(cr,
-                    scaleX(xcoords[0], gridWidth, imageWidth),
-                    scaleY(ycoords[0], gridHeight, imageHeight));
+                    scaleX(xcoords[0], gridWidth, imageWidth, view),
+                    scaleY(ycoords[0], gridHeight, imageHeight, view));
                 for(size_t k = 1; k < xcoords.size(); ++k)
                     cairo_line_to(cr,
-                        scaleX(xcoords[k], gridWidth, imageWidth),
-                        scaleY(ycoords[k], gridHeight, imageHeight));
+                        scaleX(xcoords[k], gridWidth, imageWidth, view),
+                        scaleY(ycoords[k], gridHeight, imageHeight, view));
                 cairo_close_path(cr);
             }
 
@@ -220,12 +230,12 @@ QImage renderIsobands(
                 if(hx.size() >= 3)
                 {
                     cairo_move_to(cr,
-                        scaleX(hx[0], gridWidth, imageWidth),
-                        scaleY(hy[0], gridHeight, imageHeight));
+                        scaleX(hx[0], gridWidth, imageWidth, view),
+                        scaleY(hy[0], gridHeight, imageHeight, view));
                     for(size_t k = 1; k < hx.size(); ++k)
                         cairo_line_to(cr,
-                            scaleX(hx[k], gridWidth, imageWidth),
-                            scaleY(hy[k], gridHeight, imageHeight));
+                            scaleX(hx[k], gridWidth, imageWidth, view),
+                            scaleY(hy[k], gridHeight, imageHeight, view));
                     cairo_close_path(cr);
                 }
             }
@@ -244,7 +254,8 @@ QImage renderColorGrid(
     const std::vector<float>& gridValues,
     int gridWidth, int gridHeight,
     int imageWidth, int imageHeight,
-    std::function<unsigned int(float)> colorFunc)
+    std::function<unsigned int(float)> colorFunc,
+    const GridView& view)
 {
     // colorFunc returns plain (non-premultiplied) ARGB, so the image must not be a
     // premultiplied one - writing 0xC0RRGGBB with RGB above the alpha into a
@@ -256,14 +267,18 @@ QImage renderColorGrid(
     for(int iy = 0; iy < imageHeight; ++iy)
     {
         auto* scanline = reinterpret_cast<unsigned int*>(image.scanLine(iy));
+        const double v = view.v0 + (imageHeight > 1 ? static_cast<double>(iy) / (imageHeight - 1) : 0.0)
+                                      * (view.v1 - view.v0);
         for(int ix = 0; ix < imageWidth; ++ix)
         {
-            // Map image pixel to grid coordinate. Grid row 0 is the southernmost one and
-            // image row 0 is at the top, so the vertical axis is flipped here.
-            int gx = static_cast<int>(std::round(static_cast<double>(ix) * (gridWidth - 1) / (imageWidth - 1)));
-            int gy = static_cast<int>(std::round(static_cast<double>(iy) * (gridHeight - 1) / (imageHeight - 1)));
+            // Map image pixel into the visible grid rectangle. Grid row 0 is the
+            // southernmost one and image row 0 is at the top, so v is flipped here.
+            const double u = view.u0 + (imageWidth > 1 ? static_cast<double>(ix) / (imageWidth - 1) : 0.0)
+                                          * (view.u1 - view.u0);
+            int gx = static_cast<int>(std::round(u * (gridWidth - 1)));
+            int gy = static_cast<int>(std::round((1.0 - v) * (gridHeight - 1)));
             gx = std::clamp(gx, 0, gridWidth - 1);
-            gy = gridHeight - 1 - std::clamp(gy, 0, gridHeight - 1);
+            gy = std::clamp(gy, 0, gridHeight - 1);
 
             float value = gridValues[gy * gridWidth + gx];
             if(std::isfinite(value))

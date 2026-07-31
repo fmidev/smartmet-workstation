@@ -38,6 +38,17 @@ struct IsoColor
     unsigned char r, g, b, a;
 };
 
+// The portion of the grid that fills the output image, in normalized grid coordinates
+// as they appear on screen: u runs 0..1 west to east, v runs 0..1 north to south.
+// The default covers the whole grid; a smaller rectangle zooms in on it.
+struct GridView
+{
+    double u0 = 0.0;
+    double v0 = 0.0;
+    double u1 = 1.0;
+    double v1 = 1.0;
+};
+
 // Render isolines from grid data onto a QImage.
 // gridValues: row-major grid data (width * height)
 // isoValues: data values at which to draw contour lines
@@ -50,7 +61,8 @@ QImage renderIsolines(
     int imageWidth, int imageHeight,
     const std::vector<double>& isoValues,
     unsigned int lineColor = 0xFF000000,  // ARGB black
-    double lineWidth = 1.0);
+    double lineWidth = 1.0,
+    const GridView& view = GridView());
 
 // Render filled isobands (contour fills) from grid data.
 // limits: pairs of (lo, hi) values defining each band
@@ -60,7 +72,8 @@ QImage renderIsobands(
     int gridWidth, int gridHeight,
     int imageWidth, int imageHeight,
     const std::vector<std::pair<double, double>>& limits,
-    const std::vector<unsigned int>& colors);  // ARGB for each band
+    const std::vector<unsigned int>& colors,   // ARGB for each band
+    const GridView& view = GridView());
 
 // Render a color-mapped raster image from grid data.
 // colorFunc: maps a float data value to ARGB color
@@ -68,7 +81,8 @@ QImage renderColorGrid(
     const std::vector<float>& gridValues,
     int gridWidth, int gridHeight,
     int imageWidth, int imageHeight,
-    std::function<unsigned int(float)> colorFunc);
+    std::function<unsigned int(float)> colorFunc,
+    const GridView& view = GridView());
 
 // Composite multiple rendered layers into a single image.
 QImage compositeLayers(

@@ -9,6 +9,7 @@
 #include <QMouseEvent>
 #include <QPaintEvent>
 #include <QResizeEvent>
+#include <QWheelEvent>
 
 #include <algorithm>
 #include <cmath>
@@ -161,7 +162,7 @@ void SmartMetMapView::drawModel(QPainter& painter)
     const int gw = model_.gridWidth();
     const int gh = model_.gridHeight();
 
-    auto colorLayer = WeatherRenderer::renderColorGrid(values, gw, gh, w, h, colorFunc);
+    auto colorLayer = WeatherRenderer::renderColorGrid(values, gw, gh, w, h, colorFunc, view_);
 
     const double interval = niceIsolineInterval(dataMin, dataMax);
     std::vector<double> isoValues;
@@ -169,11 +170,11 @@ void SmartMetMapView::drawModel(QPainter& painter)
         isoValues.push_back(v);
 
     auto isolineLayer = WeatherRenderer::renderIsolines(
-        values, gw, gh, w, h, isoValues, 0xFF000000, 1.5);
+        values, gw, gh, w, h, isoValues, 0xFF000000, 1.5, view_);
 
     const double refValue = std::round(((dataMin + dataMax) / 2.0) / interval) * interval;
     auto refLine = WeatherRenderer::renderIsolines(
-        values, gw, gh, w, h, {refValue}, 0xFF0000FF, 3.0);
+        values, gw, gh, w, h, {refValue}, 0xFF0000FF, 3.0, view_);
 
     painter.drawImage(0, 0, WeatherRenderer::compositeLayers(w, h,
         {colorLayer, isolineLayer, refLine}));
@@ -246,7 +247,15 @@ void SmartMetMapView::paintEvent(QPaintEvent* /*event*/)
     widgetPainter.drawImage(0, 0, backingImage_);
 }
 
-void SmartMetMapView::mouseMoveEvent(QMouseEvent* event)
+void SmartMetMapView::widgetToGrid(const QPointF& widgetPos, double& u, double& v) const
+{
+    const double relX = widgetPos.x() / std::max(1, width() - 1);
+    const double relY = widgetPos.y() / std::max(1, height() - 1);
+    u = view_.u0 + relX * (view_.u1 - view_.u0);
+    v = view_.v0 + relY * (view_.v1 - view_.v0);
+}
+
+void SmartMetMapView::emitCursorReadout(const QPointF& widgetPos)
 {
     if(demoMode_ || !model_.hasData())
     {
@@ -254,12 +263,12 @@ void SmartMetMapView::mouseMoveEvent(QMouseEvent* event)
         return;
     }
 
-    const double relX = static_cast<double>(event->position().x()) / std::max(1, width() - 1);
-    const double relY = static_cast<double>(event->position().y()) / std::max(1, height() - 1);
+    double u = 0, v = 0;
+    widgetToGrid(widgetPos, u, v);
 
     double lat = 0, lon = 0;
     float value = 0;
-    if(!model_.valueAt(relX, relY, lat, lon, value))
+    if(!model_.valueAt(u, v, lat, lon, value))
     {
         emit cursorReadout(QString());
         return;
@@ -270,6 +279,136 @@ void SmartMetMapView::mouseMoveEvent(QMouseEvent* event)
         .arg(std::abs(lon), 0, 'f', 2).arg(lon >= 0 ? "E" : "W")
         .arg(static_cast<double>(value), 0, 'f', 2)
         .arg(QString::fromStdString(model_.paramName())));
+}
+
+void SmartMetMapView::clampView()
+{
+    // Never show more than the whole grid, and never less than a hundredth of it
+    const double minSpan = 0.01;
+    double spanU = std::clamp(view_.u1 - view_.u0, minSpan, 1.0);
+    double spanV = std::clamp(view_.v1 - view_.v0, minSpan, 1.0);
+
+    view_.u0 = std::clamp(view_.u0, 0.0, 1.0 - spanU);
+    view_.v0 = std::clamp(view_.v0, 0.0, 1.0 - spanV);
+    view_.u1 = view_.u0 + spanU;
+    view_.v1 = view_.v0 + spanV;
+}
+
+void SmartMetMapView::zoomAt(const QPointF& widgetPos, double factor)
+{
+    // Keep the grid point under the cursor fixed while the span shrinks or grows
+    double anchorU = 0, anchorV = 0;
+    widgetToGrid(widgetPos, anchorU, anchorV);
+
+    const double relX = widgetPos.x() / std::max(1, width() - 1);
+    const double relY = widgetPos.y() / std::max(1, height() - 1);
+
+    const double spanU = std::clamp((view_.u1 - view_.u0) / factor, 0.01, 1.0);
+    const double spanV = std::clamp((view_.v1 - view_.v0) / factor, 0.01, 1.0);
+
+    view_.u0 = anchorU - relX * spanU;
+    view_.v0 = anchorV - relY * spanV;
+    view_.u1 = view_.u0 + spanU;
+    view_.v1 = view_.v0 + spanV;
+
+    clampView();
+    refresh();
+    emit viewChanged();
+    emitCursorReadout(widgetPos);
+}
+
+void SmartMetMapView::resetZoom()
+{
+    view_ = WeatherRenderer::GridView();
+    refresh();
+    emit viewChanged();
+}
+
+bool SmartMetMapView::isZoomed() const
+{
+    return (view_.u1 - view_.u0) < 0.999 || (view_.v1 - view_.v0) < 0.999;
+}
+
+double SmartMetMapView::zoomFactor() const
+{
+    const double span = view_.u1 - view_.u0;
+    return span > 0 ? 1.0 / span : 1.0;
+}
+
+void SmartMetMapView::wheelEvent(QWheelEvent* event)
+{
+    const int steps = event->angleDelta().y();
+    if(steps == 0)
+    {
+        QWidget::wheelEvent(event);
+        return;
+    }
+    // One notch is 120 units; zoom by 1.25 per notch
+    zoomAt(event->position(), std::pow(1.25, steps / 120.0));
+    event->accept();
+}
+
+void SmartMetMapView::mousePressEvent(QMouseEvent* event)
+{
+    if(event->button() == Qt::LeftButton)
+    {
+        panning_ = true;
+        panStartPos_ = event->position();
+        panStartView_ = view_;
+        setCursor(Qt::ClosedHandCursor);
+        event->accept();
+        return;
+    }
+    QWidget::mousePressEvent(event);
+}
+
+void SmartMetMapView::mouseReleaseEvent(QMouseEvent* event)
+{
+    if(event->button() == Qt::LeftButton && panning_)
+    {
+        panning_ = false;
+        unsetCursor();
+        event->accept();
+        return;
+    }
+    QWidget::mouseReleaseEvent(event);
+}
+
+void SmartMetMapView::mouseDoubleClickEvent(QMouseEvent* event)
+{
+    if(event->button() == Qt::LeftButton)
+    {
+        panning_ = false;
+        unsetCursor();
+        resetZoom();
+        event->accept();
+        return;
+    }
+    QWidget::mouseDoubleClickEvent(event);
+}
+
+void SmartMetMapView::mouseMoveEvent(QMouseEvent* event)
+{
+    if(panning_)
+    {
+        // Drag the map with the cursor: moving right shows what is further west
+        const QPointF delta = event->position() - panStartPos_;
+        const double spanU = panStartView_.u1 - panStartView_.u0;
+        const double spanV = panStartView_.v1 - panStartView_.v0;
+        const double shiftU = -delta.x() / std::max(1, width() - 1) * spanU;
+        const double shiftV = -delta.y() / std::max(1, height() - 1) * spanV;
+
+        view_.u0 = panStartView_.u0 + shiftU;
+        view_.v0 = panStartView_.v0 + shiftV;
+        view_.u1 = view_.u0 + spanU;
+        view_.v1 = view_.v0 + spanV;
+
+        clampView();
+        refresh();
+        emit viewChanged();
+    }
+
+    emitCursorReadout(event->position());
 }
 
 void SmartMetMapView::leaveEvent(QEvent* event)

@@ -48,6 +48,12 @@ and value readout. Keyboard navigation (also in the Data menu): ←/→ time ste
 parameter, PgUp/PgDn level, N/P loaded data. These shortcuts are scoped to the map view
 so they do not steal the arrow keys from the tree and the combo boxes.
 
+Mouse: wheel zooms around the cursor, dragging with the left button pans, double click
+or R (View - Reset zoom) returns to the whole grid. The visible area is a
+`WeatherRenderer::GridView` rectangle in normalized grid coordinates (u west to east,
+v north to south) that the map view owns and passes to every renderer call, so zooming
+resamples the data rather than scaling a bitmap.
+
 ### Windows
 
 Uses Visual Studio 2019+ with CMake. Solution generated at `smartmet-workstation_msvc/SmartMet.sln`. Requires downloading `libs.zip` from GitHub releases into `libs/3rd/`.
