@@ -211,8 +211,13 @@ void NFmiTimeControlView::Draw(NFmiToolBox * theGTB)
 		else
 			DrawNoDataAvailable();
 	}
+	catch(std::exception &e)
+	{
+		itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+	}
 	catch(...)
 	{
+		itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Unknown error in ") + __FUNCTION__, "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
 	}
 	CleanGdiplus(); // t‰t‰ pit‰‰ kutsua piirron lopuksi InitializeGdiplus -metodin vastin parina.
 }
@@ -761,8 +766,13 @@ void NFmiTimeControlView::DrawTimeFilterTimes()
 			itsRightTimeHandle.Left(itsRightTimeHandle.Right() - relXSize);
 
 		}
+		catch(std::exception &e)
+		{
+			itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+		}
 		catch(...)
 		{
+			itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Unknown error in ") + __FUNCTION__, "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
 		}
 		if(gdiPlusGraphics)
 		{
@@ -1765,8 +1775,14 @@ bool NFmiTimeControlView::SetTime(const NFmiPoint & thePlace, bool fStayInsideAn
 		}
 		return true;
 	}
+	catch(std::exception &e)
+	{
+		itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+		return false;
+	}
 	catch(...)
 	{
+		itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Unknown error in ") + __FUNCTION__, "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
 		// virhetilanteessa ei tehd‰ mit‰‰, eli ei siirret‰ aikaakaan
 		return false;
 	}
@@ -1889,8 +1905,13 @@ std::string NFmiTimeControlView::ComposeToolTipText(const NFmiPoint& theRelative
 		}
 		return str;
 	}
+	catch(std::exception &e)
+	{
+		itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+	}
 	catch(...)
 	{
+		itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Unknown error in ") + __FUNCTION__, "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
 		// ei tehd‰ mit‰‰n 
 	}
 	return std::string();

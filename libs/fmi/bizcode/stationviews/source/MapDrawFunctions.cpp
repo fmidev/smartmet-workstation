@@ -59,8 +59,13 @@ namespace
                 CtrlView::DrawBitmapToDC_4(theUsedCDC, *holder->mImage, srcRect, destRect, true);
             }
         }
+        catch(std::exception &e)
+        {
+            docInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+        }
         catch(...)
         {
+            docInterface->LogAndWarnUser(std::string("Unknown error in ") + __FUNCTION__, "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
         }
 #endif // DISABLE_CPPRESTSDK
     }

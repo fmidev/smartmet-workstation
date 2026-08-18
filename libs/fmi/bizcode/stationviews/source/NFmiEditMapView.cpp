@@ -147,8 +147,13 @@ void NFmiEditMapView::Draw(NFmiToolBox * theGTB)
 		//itsCtrlViewDocumentInterface->LogAndWarnUser(spaceoutMessage, "", CatLog::Severity::Info, CatLog::Category::Visualization, true);
 
 	}
+    catch(std::exception &e)
+    {
+        itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+    }
     catch(...)
     {
+        itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Unknown error in ") + __FUNCTION__, "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
     }
     CleanGdiplus(); // t‰t‰ pit‰‰ kutsua piirron lopuksi InitializeGdiplus -metodin vastin parina.
 }

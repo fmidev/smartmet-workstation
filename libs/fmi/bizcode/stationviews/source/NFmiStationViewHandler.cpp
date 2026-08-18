@@ -1116,8 +1116,13 @@ void NFmiStationViewHandler::DrawSilamStationMarkers(void)
 			}
 		}
 	}
+	catch(std::exception &e)
+	{
+		itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+	}
 	catch(...)
 	{
+		itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Unknown error in ") + __FUNCTION__, "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
 	}
 	itsToolBox->SetTextAlignment(oldAlingment);
 }
@@ -1953,8 +1958,13 @@ void NFmiStationViewHandler::DrawWmsLegends(NFmiToolBox* theGTB)
 				vSelves.verticalShift = 0;
 			}
 		}
+		catch(std::exception &e)
+		{
+			itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+		}
 		catch(...)
 		{
+			itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Unknown error in ") + __FUNCTION__, "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
 		}
 	}
 #endif // DISABLE_CPPRESTSDK
@@ -3821,8 +3831,13 @@ void NFmiStationViewHandler::DrawProjetionLines(NFmiToolBox * theGTB)
                     theGTB->Convert(&(*it->get()));
             }
         }
+        catch(std::exception &e)
+        {
+            itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+        }
         catch(...)
         {
+            itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Unknown error in ") + __FUNCTION__, "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
 //            itsCtrlViewDocumentInterface->LogAndWarnUser("Unknown exception in NFmiStationViewHandler::DrawProjetionLines", "", NFmiLogger::kError, true);
         }
 		itsDrawingEnvironment.SetFontType(oldFont);

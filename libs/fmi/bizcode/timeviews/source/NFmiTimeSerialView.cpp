@@ -288,8 +288,13 @@ void NFmiTimeSerialView::Draw(NFmiToolBox* theToolBox)
 		NFmiRectangle dataRectangle(itsDataRect, 0, &dataRectEnvi);
 		itsToolBox->Convert(&dataRectangle);
 	}
+	catch(std::exception &e)
+	{
+		itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+	}
 	catch(...)
 	{
+		itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Unknown error in ") + __FUNCTION__, "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
 	}
 
 	itsInfo = boost::shared_ptr<NFmiFastQueryInfo>();
@@ -339,20 +344,17 @@ void NFmiTimeSerialView::DrawHelperDataLocationInTime(const NFmiPoint &theLatlon
     // Smartmet on kaatunut joskus mystisesti HESSAA symbolin kanssa, joten ei piirretä, kun on erikoisnäytöstä kyse
     if(!IsParamWeatherSymbol3())
     {
-        if(itsCtrlViewDocumentInterface->IsOperationalModeOn())
+        if(itsCtrlViewDocumentInterface->ShowHelperData1InTimeSerialView())
         {
-            if(itsCtrlViewDocumentInterface->ShowHelperData1InTimeSerialView())
-            {
-                NFmiDrawingEnvironment envi;
-                DrawModelDataLocationInTime(envi, theLatlon);
-                DrawHelpEditorDataLocationInTime(envi, theLatlon);
-                DrawKepaDataLocationInTime(envi, theLatlon);
-                DrawFraktiiliDataLocationInTime(envi, theLatlon);
-            }
-            DrawHelperData2LocationInTime(theLatlon);
-            DrawHelperData3LocationInTime(theLatlon);
-            DrawHelperData4LocationInTime(theLatlon);
+            NFmiDrawingEnvironment envi;
+            DrawModelDataLocationInTime(envi, theLatlon);
+            DrawHelpEditorDataLocationInTime(envi, theLatlon);
+            DrawKepaDataLocationInTime(envi, theLatlon);
+            DrawFraktiiliDataLocationInTime(envi, theLatlon);
         }
+        DrawHelperData2LocationInTime(theLatlon);
+        DrawHelperData3LocationInTime(theLatlon);
+        DrawHelperData4LocationInTime(theLatlon);
     }
 }
 
@@ -618,52 +620,52 @@ void NFmiTimeSerialView::DrawModelDataLegend(const std::vector<NFmiColor> &theUs
 {
 	if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
 		return ;
+
 	itsToolBox->UseClipping(false);
-	if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode() == false) // ei piirretä CP legendaa ja model legendaa yhtä aikaa
+	// Model legend is drawn also in ControlPoint mode. Earlier it was skipped in CP mode
+	// so that the CP legend and the model legend wouldn't be drawn at the same time, but
+	// the model helper data itself is still drawn in CP mode, so its legend must be shown too.
+	NFmiDrawingEnvironment envi;
+	envi.SetPenSize(NFmiPoint(2, 2));
+	FmiDirection oldAligment = itsToolBox->GetTextAlignment();
+	itsToolBox->SetTextAlignment(kBaseRight); // draw the text to the left of textPoint and the line to the right
+
+	NFmiPoint fontSize(16,16);
+	envi.SetFontSize(fontSize);
+
+	boost::shared_ptr<NFmiFastQueryInfo> info = Info();
+	if(info)
 	{
-		NFmiDrawingEnvironment envi;
-		envi.SetPenSize(NFmiPoint(2, 2));
-		FmiDirection oldAligment = itsToolBox->GetTextAlignment();
-		itsToolBox->SetTextAlignment(kBaseRight); // piirretään teksti vasemmalle textPoint:ista ja viiva oikealle
+		NFmiRect frame(GetFrame());
+		NFmiPoint textPoint(frame.TopLeft());
+		textPoint.X(textPoint.X() + frame.Width()/7*6);
+		double heightInc = itsToolBox->SY(15);
+		double endPointX1 = textPoint.X() + frame.Width()/18*1;
+		textPoint.Y(textPoint.Y() + heightInc);
 
-		NFmiPoint fontSize(16,16);
-		envi.SetFontSize(fontSize);
-
-		boost::shared_ptr<NFmiFastQueryInfo> info = Info();
-		if(info)
+		for(size_t i = 0; (i < theFoundProducerNames.size()) && (i < theUsedColors.size()); i++)
 		{
-			NFmiRect frame(GetFrame());
-			NFmiPoint textPoint(frame.TopLeft());
-			textPoint.X(textPoint.X() + frame.Width()/7*6);
-			double heightInc = itsToolBox->SY(15);
-			double endPointX1 = textPoint.X() + frame.Width()/18*1;
+			envi.SetFrameColor(theUsedColors[i]);
+			NFmiText text(textPoint, theFoundProducerNames[i].c_str(), true, 0, &envi);
+			itsToolBox->Convert(&text);
+
+			NFmiLine line1(NFmiPoint(textPoint.X(), textPoint.Y() - heightInc/2.), NFmiPoint(endPointX1, textPoint.Y() - heightInc/2.), 0, &envi);
+			itsToolBox->Convert(&line1);
+
 			textPoint.Y(textPoint.Y() + heightInc);
-			int currentLineIndex = 0;
+		}
 
-			for(size_t i = 0; (i < theFoundProducerNames.size()) && (i < theUsedColors.size()); i++)
-			{
-				envi.SetFrameColor(theUsedColors[i]);
-				NFmiText text(textPoint, theFoundProducerNames[i].c_str(), true, 0, &envi);
-				itsToolBox->Convert(&text);
-
-				NFmiLine line1(NFmiPoint(textPoint.X(), textPoint.Y() - heightInc/2.), NFmiPoint(endPointX1, textPoint.Y() - heightInc/2.), 0, &envi);
-				itsToolBox->Convert(&line1);
-
-				textPoint.Y(textPoint.Y() + heightInc);
-			}
-
-			// laitetaan tarvittaessa myös help editor data legendä näkyviin
-			if(itsCtrlViewDocumentInterface->HelpEditorSystem().Use())
-			{
-				NFmiProducer prod(NFmiProducerSystem::gHelpEditorDataProdId, "helpdata");
-                DrawExistingDataLegend(prod, NFmiInfoData::kEditingHelpData, itsDrawParam, itsCtrlViewDocumentInterface->HelpEditorSystem().HelpColor(), heightInc, endPointX1, textPoint, envi);
-			}
-            // Virallisen operatiivisen datan legenda
-            NFmiProducer prod(0, "operational");
-            DrawExistingDataLegend(prod, NFmiInfoData::kKepaData, itsDrawParam, g_OfficialDataColor, heightInc, endPointX1, textPoint, envi);
-        }
-		itsToolBox->SetTextAlignment(oldAligment);
+		// show also the help editor data legend when needed
+		if(itsCtrlViewDocumentInterface->HelpEditorSystem().Use())
+		{
+			NFmiProducer prod(NFmiProducerSystem::gHelpEditorDataProdId, "helpdata");
+			DrawExistingDataLegend(prod, NFmiInfoData::kEditingHelpData, itsDrawParam, itsCtrlViewDocumentInterface->HelpEditorSystem().HelpColor(), heightInc, endPointX1, textPoint, envi);
+		}
+		// legend of the official operational data
+		NFmiProducer prod(0, "operational");
+		DrawExistingDataLegend(prod, NFmiInfoData::kKepaData, itsDrawParam, g_OfficialDataColor, heightInc, endPointX1, textPoint, envi);
 	}
+	itsToolBox->SetTextAlignment(oldAligment);
 }
 
 void NFmiTimeSerialView::DrawExistingDataLegend(const NFmiProducer &producer, NFmiInfoData::Type dataType, boost::shared_ptr<NFmiDrawParam> &drawParam, const NFmiColor &color, double heightIncrement, double endPointX, NFmiPoint &legendPlaceInOut, NFmiDrawingEnvironment &drawingEnvironmentInOut)
@@ -1775,7 +1777,7 @@ void NFmiTimeSerialView::DrawSelectedStationData(boost::shared_ptr<NFmiFastQuery
 
 void NFmiTimeSerialView::DrawHelperObservationData(const NFmiPoint &theLatlon)
 {
-    if(itsCtrlViewDocumentInterface->IsOperationalModeOn() && itsCtrlViewDocumentInterface->ShowHelperData1InTimeSerialView())
+    if(itsCtrlViewDocumentInterface->ShowHelperData1InTimeSerialView())
     {
         // Ei piirretä jos valittu data on havainto tyyppista ja synop tuottajalta, koska käyrä on jo piirrettynä valittuna datana edellä.
         // Jos se piirretään uudestaan originaali (sininen) käyrä peittyisi nyt punaisella käyrällä
@@ -2692,18 +2694,43 @@ static NFmiTimeBag GetScannedTimes(const NFmiTimeBag &theViewTimes)
 	return NFmiTimeBag(newFirstTime, newLastTime, stepInMinutes);
 }
 
+// RAII guard that sets itsOperationMode to the wanted temporary mode and guarantees
+// that the original mode is restored on scope exit, even if the scanning / CSV drawing throws.
+namespace
+{
+	class TimeSerialOperationModeGuard
+	{
+		TimeSerialOperationMode &itsModeRef;
+		TimeSerialOperationMode itsOriginalMode;
+	public:
+		TimeSerialOperationModeGuard(TimeSerialOperationMode &modeRef, TimeSerialOperationMode newMode)
+			:itsModeRef(modeRef)
+			,itsOriginalMode(modeRef)
+		{
+			itsModeRef = newMode;
+		}
+		~TimeSerialOperationModeGuard()
+		{
+			itsModeRef = itsOriginalMode;
+		}
+		TimeSerialOperationModeGuard(const TimeSerialOperationModeGuard &) = delete;
+		TimeSerialOperationModeGuard &operator=(const TimeSerialOperationModeGuard &) = delete;
+	};
+}
+
 bool NFmiTimeSerialView::AutoAdjustValueScale(void)
 {
-	itsOperationMode = TimeSerialOperationMode::MinMaxScanMode;
-	itsAutoAdjustMinMaxValues.Clear();
-	itsScannedLatlonPoints = GetViewedLatlonPoints();
-	itsAutoAdjustScanTimes = ::GetScannedTimes(GetViewLimitingTimes());
-	itsInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, true);
-	DrawSelectedStationData(); // skannataan piirto-systeemi läpi ilman piirtoa etsien min/max arvoja eri datoista
-	itsToolBox->UseClipping(false);
-	itsDrawingEnvironment.EnableFill();
-	
-	itsOperationMode = TimeSerialOperationMode::NormalDrawMode;
+	{
+		// Guarantee that the operation mode is restored even if the min/max scan throws
+		TimeSerialOperationModeGuard operationModeGuard(itsOperationMode, TimeSerialOperationMode::MinMaxScanMode);
+		itsAutoAdjustMinMaxValues.Clear();
+		itsScannedLatlonPoints = GetViewedLatlonPoints();
+		itsAutoAdjustScanTimes = ::GetScannedTimes(GetViewLimitingTimes());
+		itsInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, true);
+		DrawSelectedStationData(); // scan the drawing system through without drawing, looking for min/max values from different data
+		itsToolBox->UseClipping(false);
+		itsDrawingEnvironment.EnableFill();
+	}
 
 	float minValue = itsAutoAdjustMinMaxValues.MinValue();
 	float maxValue = itsAutoAdjustMinMaxValues.MaxValue();
@@ -3927,8 +3954,13 @@ void NFmiTimeSerialView::DrawModelRunsPlume(const NFmiPoint &theLatLonPoint, NFm
 				}
 			}
 		}
+		catch(std::exception &e)
+		{
+			itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+		}
 		catch(...)
 		{
+			itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Unknown error in ") + __FUNCTION__, "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
 		}
 		*itsDrawParam = origDrawParam; // palutetaan lopuksi originaali piirto-ominaisuudet
 	}
@@ -4826,10 +4858,12 @@ std::string NFmiTimeSerialView::MakeCsvDataString()
 	itsInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, true);
 	if(itsInfo)
 	{
-		itsOperationMode = TimeSerialOperationMode::CsvDataGeneration;
-		itsAutoAdjustScanTimes = GetViewLimitingTimes();
-		DrawSelectedStationData();
-		itsOperationMode = TimeSerialOperationMode::NormalDrawMode;
+		{
+			// Guarantee that the operation mode is restored even if the CSV data generation throws
+			TimeSerialOperationModeGuard operationModeGuard(itsOperationMode, TimeSerialOperationMode::CsvDataGeneration);
+			itsAutoAdjustScanTimes = GetViewLimitingTimes();
+			DrawSelectedStationData();
+		}
 		if(!itsCsvGenerationTimes.empty())
 		{
 			auto headerString = MakeTimeSerialCsvHeaderString();
