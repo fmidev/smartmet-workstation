@@ -2,6 +2,7 @@
 #include "NFmiDrawParamList.h"
 #include "NFmiDrawParam.h"
 #include "CtrlViewDocumentInterface.h"
+#include "GraphicalInfo.h"
 #include "NFmiTimeSerialView.h"
 #include "NFmiTimeSerialPrecipitationFormView.h"
 #include "NFmiTimeSerialPrecipitationTypeView.h"
@@ -456,8 +457,18 @@ NFmiRect NFmiTimeValueEditManagerView::CalcListViewRect(int theIndex)
 
 double NFmiTimeValueEditManagerView::CalcTimeAxisHeight(void)
 {
-	double height = itsToolBox->SY(52);
-	return height;
+	// The time control view content (time labels, filter handles, etc.) is sized in
+	// millimeters * pixelsPerMM (see NFmiTimeControlView), so it grows with the monitor DPI /
+	// Windows display scaling. Reserve the height the same DPI-aware way instead of a fixed
+	// pixel amount, otherwise the content gets clipped on high-DPI / scaled displays.
+	// 13.8 mm corresponds to the old fixed 52 px at 96 DPI (100 % scaling), so normal displays
+	// are practically unaffected while scaled displays get proportionally more room.
+	const double timeAxisHeightInMM = 13.8;
+	double pixelsPerMM_y = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_y;
+	if(pixelsPerMM_y <= 0)
+		return itsToolBox->SY(57); // graphical info not available yet, fall back to the old fixed height
+	double heightInPixels = timeAxisHeightInMM * pixelsPerMM_y;
+	return itsToolBox->SY(static_cast<long>(heightInPixels + 0.5));
 }
 
 // koolla ei vaikutusta, timescale view on aina saman kokoinen korkeussuunnassa!!!!!

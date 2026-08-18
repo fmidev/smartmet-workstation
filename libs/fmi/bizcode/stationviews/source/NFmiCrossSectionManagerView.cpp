@@ -319,10 +319,25 @@ NFmiRect NFmiCrossSectionManagerView::CalcFooterRect(void)
 {
 	NFmiRect rr(GetFrame());
 	// HUOM! Piirrettäessä kuvaa näytölle, tulee mukaan aikakontrolli ikkuna, mutta printatessa se jää pois, jos kyse normaalista moodista
-	double emptySpace = itsToolBox->SY(FmiRound(65 * itsDrawSizeFactorY)); // 60-pikseliä pitää olla tilaa alhaalla, teksti rivi + koordinaatit/aikakontrolli-ikkuna
-	if(itsToolBox->GetDC()->IsPrinting() && itsCrossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kNormal)
+	// Footer holds one text line plus the time control view. The time control view content is
+	// sized in mm * pixelsPerMM (DPI-aware), so on screen reserve the footer height the same
+	// DPI-aware way instead of a fixed pixel amount, otherwise it gets clipped on high-DPI /
+	// scaled displays. 17.2 mm corresponds to the old fixed 65 px at 96 DPI (100 % scaling).
+	double emptySpace;
+	if(itsToolBox->GetDC()->IsPrinting())
 	{
-		emptySpace = itsToolBox->SY(FmiRound(20 * itsDrawSizeFactorY));
+		if(itsCrossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kNormal)
+			emptySpace = itsToolBox->SY(FmiRound(20 * itsDrawSizeFactorY));
+		else
+			emptySpace = itsToolBox->SY(FmiRound(65 * itsDrawSizeFactorY));
+	}
+	else
+	{
+		double pixelsPerMM_y = itsCrossSectionSystem->GetGraphicalInfo().itsPixelsPerMM_y;
+		if(pixelsPerMM_y > 0)
+			emptySpace = itsToolBox->SY(FmiRound(17.2 * pixelsPerMM_y));
+		else
+			emptySpace = itsToolBox->SY(FmiRound(65 * itsDrawSizeFactorY));
 	}
 	rr.Top(rr.Bottom() - emptySpace);
 	return rr;
