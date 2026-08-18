@@ -638,9 +638,11 @@ void NFmiTimeSerialView::DrawModelDataLegend(const std::vector<NFmiColor> &theUs
 	{
 		NFmiRect frame(GetFrame());
 		NFmiPoint textPoint(frame.TopLeft());
-		textPoint.X(textPoint.X() + frame.Width()/7*6);
 		double heightInc = itsToolBox->SY(15);
-		double endPointX1 = textPoint.X() + frame.Width()/18*1;
+		double lineLength = frame.Width()/18*1;
+		// keep the legend size but move it so that its right edge is on the data rect's right edge
+		double endPointX1 = itsDataRect.Right();
+		textPoint.X(endPointX1 - lineLength);
 		textPoint.Y(textPoint.Y() + heightInc);
 
 		for(size_t i = 0; (i < theFoundProducerNames.size()) && (i < theUsedColors.size()); i++)
@@ -1565,8 +1567,6 @@ void NFmiTimeSerialView::DrawModifyingUnit(void)
 		{
 			{
 				str += NFmiString(itsCtrlViewDocumentInterface->TimeSerialViewDrawParamList()->Current()->Unit());
-				std::string locString(::GetDictionaryString("TimeSerialViewUnitString"));
-				str += NFmiString(locString);
 			}
 		}
 
@@ -2062,6 +2062,12 @@ void NFmiTimeSerialView::DrawCPReferenceLines_ForCurrentCp(boost::shared_ptr<NFm
 void NFmiTimeSerialView::DrawCPReferenceLines_DrawAllCps(bool drawModificationLines)
 {
     CpDrawingOptions cpDrawingOptions(MakeNormalCpLineDrawOptions(), MakeChangeCpLineDrawOptions(), GetFrame(), itsToolBox);
+    // Place the CP line legend (index text + colour line markers) so its center is at 2/3 of the data rect's width
+    double cpLegendCenterX = itsDataRect.Left() + itsDataRect.Width() * 2. / 3.;
+    double cpLegendShiftX = cpLegendCenterX - (cpDrawingOptions.textPoint.X() + cpDrawingOptions.endPointX2) / 2.;
+    cpDrawingOptions.textPoint.X(cpDrawingOptions.textPoint.X() + cpLegendShiftX);
+    cpDrawingOptions.endPointX1 += cpLegendShiftX;
+    cpDrawingOptions.endPointX2 += cpLegendShiftX;
     // piirretään teksti vasemmalle textPoint:ista ja viiva oikealle
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, kBaseRight, itsToolBox->UseClipping());
 
@@ -3523,13 +3529,13 @@ NFmiRect NFmiTimeSerialView::CalcModifyingUnitRect(void)
 {
 	NFmiRect timeAxisRect(CalcTimeAxisRect());
 	NFmiPoint place(timeAxisRect.TopRight());
-	place.X(place.X() - timeAxisRect.Width() * 0.02);
 	double rectHeight = timeAxisRect.Width()/30.;
 	NFmiPoint size(0, rectHeight);
 	NFmiRect rect;
 	rect.Place(place);
 	rect.Size(size);
 	rect.Right(GetFrame().Right());
+	rect.Left(rect.Right() - timeAxisRect.Width() * 0.04); // narrow box, only the short unit text is shown now (no more "-unit" suffix)
 	return rect;
 }
 
