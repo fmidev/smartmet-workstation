@@ -1973,8 +1973,14 @@ void NFmiTimeSerialView::DrawCPReferenceLines_SetLineOptions(boost::shared_ptr<N
         cpDrawingOptions.currentDataEnvi.SetPenSize(cpDrawingOptions.normalLine);
         cpDrawingOptions.changeDataEnvi.SetPenSize(cpDrawingOptions.normalChangeLine);
     }
-    cpDrawingOptions.currentDataEnvi.SetFrameColor(gCPHelpColors[cpDrawingOptions.currentLineIndex]);
-    cpDrawingOptions.changeDataEnvi.SetFrameColor(gCPHelpColors[cpDrawingOptions.currentLineIndex]);
+
+	// Active CP point is drawn with the first color always
+    auto usedLineIndex = cpManager->IsActivateCP() ? 0 : cpDrawingOptions.currentLineIndex;
+	if(usedLineIndex >= 0 && usedLineIndex < static_cast<int>(gCPHelpColors.size()))
+	{
+		cpDrawingOptions.currentDataEnvi.SetFrameColor(gCPHelpColors[usedLineIndex]);
+		cpDrawingOptions.changeDataEnvi.SetFrameColor(gCPHelpColors[usedLineIndex]);
+	}
 }
 
 bool NFmiTimeSerialView::DrawCPReferenceLines_IsCpDrawn(boost::shared_ptr<NFmiEditorControlPointManager> &cpManager)
@@ -2077,8 +2083,9 @@ void NFmiTimeSerialView::DrawCPReferenceLines_DrawAllCps(bool drawModificationLi
     {
         for(CPMan->ResetCP(); CPMan->NextCP();)
         {
-            if(cpDrawingOptions.currentLineIndex >= gMaxHelpCPDrawed)
-                break; // ei piirretä enempää referenssi viivoja
+            // Let's draw legend on for x first CP point and always for the active CP point.
+            if(!CPMan->IsActivateCP() && cpDrawingOptions.currentLineIndex >= gMaxHelpCPDrawed)
+                continue;
 
             DrawCPReferenceLines_ForCurrentCp(CPMan, info, cpDrawingOptions, drawModificationLines);
         }
@@ -4799,8 +4806,13 @@ std::string NFmiTimeSerialView::GetEditingRelatedDataToolTipText(const NFmiPoint
 
 NFmiPoint NFmiTimeSerialView::GetTooltipLatlon() const
 {
-    // 1. If control-point mode, return active CP latlon
-    if(DoControlPointModeDrawing())
+    // 1. In control-point mode the active CP is the reference point, but only for the edited data
+    //    itself (that is what control points modify). For non-edited reference rows (model /
+    //    observation data) we keep using the normal pointed / selected map location, the same way
+    //    as outside CP mode, so their curve and the observation/model legends are always drawn and
+    //    describe the pointed location - instead of following the active CP, which is often not set
+    //    (ActiveCPLatLon() then returns a missing latlon and neither legend gets drawn at all).
+    if(DoControlPointModeDrawing() && itsDrawParam->DataType() == NFmiInfoData::kEditable)
         return itsCtrlViewDocumentInterface->CPManager()->ActiveCPLatLon();
 
     // 2. If non-edited data selected
