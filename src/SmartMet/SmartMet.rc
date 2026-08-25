@@ -1081,8 +1081,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 5,14,7,9
- PRODUCTVERSION 5,14,7,9
+ FILEVERSION 5,14,7,10
+ PRODUCTVERSION 5,14,7,10
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -1099,12 +1099,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "FMI (Finnish Meteorological Instituet)"
             VALUE "FileDescription", "SmartMet meteorological workstation"
-            VALUE "FileVersion", "5.14.7.9"
+            VALUE "FileVersion", "5.14.7.10"
             VALUE "InternalName", "SmartMet"
             VALUE "LegalCopyright", "(C) 1999-2026 FMI (Finnish Meteorological Instituet).  All rights reserved"
             VALUE "OriginalFilename", "SmartMet.exe"
             VALUE "ProductName", "SmartMet"
-            VALUE "ProductVersion", "5.14.7.9"
+            VALUE "ProductVersion", "5.14.7.10"
         END
     END
     BLOCK "VarFileInfo"
