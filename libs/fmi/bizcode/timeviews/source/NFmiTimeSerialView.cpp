@@ -1164,9 +1164,12 @@ void NFmiTimeSerialView::DrawStationNameLegend(const NFmiLocation* theLocation, 
 		theEnvi.SetFontSize(theFontSize);
 		NFmiString tmpStr(thePreLocationString);
 		tmpStr += theLocation->GetName();
-		tmpStr += " (";
-		tmpStr += std::to_string(theLocation->GetIdent());
-		tmpStr += ")";
+		if(theLocation->GetIdent() != 0)
+		{
+			tmpStr += " (";
+			tmpStr += std::to_string(theLocation->GetIdent());
+			tmpStr += ")";
+		}
 
 		if(theDistanceInMeters != kFloatMissing)
 		{
@@ -1727,7 +1730,25 @@ void NFmiTimeSerialView::DrawStationDataStationNameLegend(boost::shared_ptr<NFmi
 	{
 		itsToolBox->UseClipping(false);
 		NFmiLocation loc = *info->Location();
-		if(info->Grid())
+		// In control-point mode with an active CP, label this location legend with the CP id and the
+		// active CP's own location ("CP <id>: lat,lon", id is 1-based) instead of the plain grid
+		// "loc: lat,lon". The lat/lon is formatted exactly like the grid case below.
+		int activeCpIndex = itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode()
+			? itsCtrlViewDocumentInterface->CPManager()->GetActiveCpIndex() : -1;
+		if(activeCpIndex >= 0)
+		{
+			const NFmiPoint &cpLatlon = itsCtrlViewDocumentInterface->CPManager()->ActiveCPLatLon();
+			string locName;
+			locName += "CP ";
+			locName += std::to_string(activeCpIndex + 1); // CP id shown to the user starts from 1, not 0
+			locName += ": ";
+			locName += CtrlViewUtils::GetLatitudeMinuteStr(cpLatlon.Y(), 0);
+			locName += ",";
+			locName += CtrlViewUtils::GetLongitudeMinuteStr(cpLatlon.X(), 0);
+			loc.SetName(locName);
+			loc.SetIdent(0); // don't let DrawStationNameLegend append a station ident after the CP text
+		}
+		else if(info->Grid())
 		{
 			string locName;
 			locName += "loc: ";
@@ -2047,6 +2068,17 @@ void NFmiTimeSerialView::DrawCPReferenceLines_DrawCpLocation(boost::shared_ptr<N
     {
         // Piirretään mahdolliset apu havainnot viimeiseksi, jotta erilaiset parvet eivät peittäisi niitä (tästä tulee aina vain yksi käyrä, joten se ei peitä paljoa)
         DrawHelperObservationData(cpManager->LatLon());
+        // Draw the "CP <id>: lat,lon" location legend for the active CP. DrawStationDataStationNameLegend
+        // is otherwise only reached from the non-CP (normal) drawing path, so without this explicit call
+        // the CP location legend would never appear while control-point-mode drawing is done.
+        // Use a copy of the CP line environment so the legend's font-size change does not leak into the
+        // CP index legend drawn right after this (DrawCPReferenceLines_DrawLegend reuses currentDataEnvi).
+        boost::shared_ptr<NFmiFastQueryInfo> activeCpInfo = Info();
+        if(activeCpInfo)
+        {
+            NFmiDrawingEnvironment cpLocationLegendEnvi(cpDrawingOptions.currentDataEnvi);
+            DrawStationDataStationNameLegend(activeCpInfo, cpManager->LatLon(), 1, cpLocationLegendEnvi);
+        }
     }
 }
 

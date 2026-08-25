@@ -121,6 +121,7 @@ public:
    void Name(const std::string &newValue) {itsName = newValue;}
    bool MakeControlPointAcceleratorAction(ControlPointAcceleratorActions action);
    int CPCount() const { return itsCPCount; }
+   int GetActiveCpIndex() const;
 
    std::istream& Read (std::istream& file) ;
    std::ostream& Write (std::ostream& file) const;
@@ -137,7 +138,6 @@ private:
 	void ClearIndexedParamChangeValues(float newValue, int paramIndex);
 	void ClearIndexedParamIndexedCPChangeValues(float newValue, int paramIndex, int CPIndex);
     void AddZoomedAreaStationsToCPVector(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, boost::shared_ptr<NFmiArea> &theArea, std::vector<NFmiPoint> &theAddedControlPointsInOut);
-    int GetActiveCpIndex() const;
     bool ActivateFirstCp();
     void ResetActivityVector();
 
