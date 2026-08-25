@@ -5341,6 +5341,9 @@ void DoControlPointCommand(FmiMenuCommandType command)
     }
     break;
     }
+
+	// Needs to update time-serial view after most of these commands
+	ApplicationInterface::GetApplicationInterfaceImplementation()->ApplyUpdatedViewsFlag(SmartMetViewId::TimeSerialView);
 }
 
 NFmiAreaMask* CreateMask(const NFmiMenuItem& theMenuItem)

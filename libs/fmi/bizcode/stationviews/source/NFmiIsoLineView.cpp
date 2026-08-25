@@ -461,8 +461,13 @@ void NFmiIsoLineView::Draw(NFmiToolBox *theGTB)
             }
         }
     }
+    catch(std::exception &e)
+    {
+        itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+    }
     catch(...)
     {
+        itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Unknown error in ") + __FUNCTION__, "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
     }
 
     EndTransparentDraw(); // jos piirrossa oli l‰pin‰kyvyytt‰, pit‰‰ viel‰ tehd‰ pari kikkaa ja siivota j‰ljet

@@ -1547,8 +1547,14 @@ int NFmiCrossSectionView::FillObsPartOfTimeCrossSectionData(NFmiDataMatrix<float
 		{
 			::FillCrossSectionMatrixWithObservedSoundings(theValues, soundingInfo, itsDrawParam, times, thePressures, firstForecastTimeIndex, itsObsForModeFoundObsTimes, metaWindParamUsage);
 		}
+		catch(std::exception &e)
+		{
+			itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+			firstForecastTimeIndex = 0; // if no data, parameter or station was found close enough, forecasts start filling from the middle so the user notices the deficiency
+		}
 		catch(...)
 		{ // luultavasti haluttua parametria ei löytynyt
+			itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Unknown error in ") + __FUNCTION__, "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
 			firstForecastTimeIndex = 0; //(times.GetSize() / 2) + 1;  // jos ei löytynyt havainto dataa, parametria tai asemaa tarpeeksi läheltä, ennusteita aletaan täyttämään vasta puolesta välistä, että käyttäjä huomaa  puutteen
 		}
 	}

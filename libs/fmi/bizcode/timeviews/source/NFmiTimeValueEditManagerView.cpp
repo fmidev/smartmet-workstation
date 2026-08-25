@@ -2,6 +2,7 @@
 #include "NFmiDrawParamList.h"
 #include "NFmiDrawParam.h"
 #include "CtrlViewDocumentInterface.h"
+#include "GraphicalInfo.h"
 #include "NFmiTimeSerialView.h"
 #include "NFmiTimeSerialPrecipitationFormView.h"
 #include "NFmiTimeSerialPrecipitationTypeView.h"
@@ -13,6 +14,7 @@
 #include "NFmiRectangle.h"
 #include "NFmiStepTimeScale.h"
 #include "CtrlViewTimeConsumptionReporter.h"
+#include "CtrlViewFunctions.h"
 #include "SpecialDesctopIndex.h"
 #include "NFmiInfoOrganizer.h"
 #include "NFmiFastQueryInfo.h"
@@ -456,8 +458,23 @@ NFmiRect NFmiTimeValueEditManagerView::CalcListViewRect(int theIndex)
 
 double NFmiTimeValueEditManagerView::CalcTimeAxisHeight(void)
 {
-	double height = itsToolBox->SY(52);
-	return height;
+	// The time axis draws, top to bottom: tick marks, the hour label, the short date and the
+	// weekday name (see NFmiAdjustedTimeScaleView::DrawScale). The three text rows are sized in
+	// pixels from the time-scale font, which grows with the monitor DPI / Windows display scaling,
+	// but the tick-mark band on top of them is a fixed device-pixel height that does NOT scale
+	// (NFmiTimeScaleView::itsTickLenght = border width 3 * 3 = 9 px). A purely mm/DPI-proportional
+	// reservation therefore comes up short at low DPI (100 % scaling), where the fixed tick band
+	// eats a larger share of the total and clips the bottom weekday row. So reserve the height the
+	// same way the content is built: fixed tick band + font-proportional text rows. Using the same
+	// font helper (and pixelsPerMM_x) as the drawing keeps the reservation in sync with it.
+	double pixelsPerMM_x = itsCtrlViewDocumentInterface->GetGraphicalInfo(itsMapViewDescTopIndex).itsPixelsPerMM_x;
+	if(pixelsPerMM_x <= 0)
+		return itsToolBox->SY(58); // graphical info not available yet, fall back to a safe fixed height
+	const double tickMarkBandInPixels = 9.; // NFmiTimeScaleView tick length (border width 3 * 3), fixed device pixels
+	const double textRowsFactor = 2.7; // hour + date + weekday rows below the tick band (~2.4 needed, rest is margin)
+	double fontSizeInPixels = CtrlViewUtils::CalcTimeScaleFontSizeInPixels(pixelsPerMM_x).Y();
+	double heightInPixels = tickMarkBandInPixels + fontSizeInPixels * textRowsFactor;
+	return itsToolBox->SY(static_cast<long>(heightInPixels + 0.5));
 }
 
 // koolla ei vaikutusta, timescale view on aina saman kokoinen korkeussuunnassa!!!!!

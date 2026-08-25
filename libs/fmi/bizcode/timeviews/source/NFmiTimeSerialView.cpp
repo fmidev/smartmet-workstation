@@ -288,8 +288,13 @@ void NFmiTimeSerialView::Draw(NFmiToolBox* theToolBox)
 		NFmiRectangle dataRectangle(itsDataRect, 0, &dataRectEnvi);
 		itsToolBox->Convert(&dataRectangle);
 	}
+	catch(std::exception &e)
+	{
+		itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+	}
 	catch(...)
 	{
+		itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Unknown error in ") + __FUNCTION__, "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
 	}
 
 	itsInfo = boost::shared_ptr<NFmiFastQueryInfo>();
@@ -339,20 +344,17 @@ void NFmiTimeSerialView::DrawHelperDataLocationInTime(const NFmiPoint &theLatlon
     // Smartmet on kaatunut joskus mystisesti HESSAA symbolin kanssa, joten ei piirret‰, kun on erikoisn‰ytˆst‰ kyse
     if(!IsParamWeatherSymbol3())
     {
-        if(itsCtrlViewDocumentInterface->IsOperationalModeOn())
+        if(itsCtrlViewDocumentInterface->ShowHelperData1InTimeSerialView())
         {
-            if(itsCtrlViewDocumentInterface->ShowHelperData1InTimeSerialView())
-            {
-                NFmiDrawingEnvironment envi;
-                DrawModelDataLocationInTime(envi, theLatlon);
-                DrawHelpEditorDataLocationInTime(envi, theLatlon);
-                DrawKepaDataLocationInTime(envi, theLatlon);
-                DrawFraktiiliDataLocationInTime(envi, theLatlon);
-            }
-            DrawHelperData2LocationInTime(theLatlon);
-            DrawHelperData3LocationInTime(theLatlon);
-            DrawHelperData4LocationInTime(theLatlon);
+            NFmiDrawingEnvironment envi;
+            DrawModelDataLocationInTime(envi, theLatlon);
+            DrawHelpEditorDataLocationInTime(envi, theLatlon);
+            DrawKepaDataLocationInTime(envi, theLatlon);
+            DrawFraktiiliDataLocationInTime(envi, theLatlon);
         }
+        DrawHelperData2LocationInTime(theLatlon);
+        DrawHelperData3LocationInTime(theLatlon);
+        DrawHelperData4LocationInTime(theLatlon);
     }
 }
 
@@ -618,52 +620,54 @@ void NFmiTimeSerialView::DrawModelDataLegend(const std::vector<NFmiColor> &theUs
 {
 	if(itsOperationMode != TimeSerialOperationMode::NormalDrawMode)
 		return ;
+
 	itsToolBox->UseClipping(false);
-	if(itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode() == false) // ei piirret‰ CP legendaa ja model legendaa yht‰ aikaa
+	// Model legend is drawn also in ControlPoint mode. Earlier it was skipped in CP mode
+	// so that the CP legend and the model legend wouldn't be drawn at the same time, but
+	// the model helper data itself is still drawn in CP mode, so its legend must be shown too.
+	NFmiDrawingEnvironment envi;
+	envi.SetPenSize(NFmiPoint(2, 2));
+	FmiDirection oldAligment = itsToolBox->GetTextAlignment();
+	itsToolBox->SetTextAlignment(kBaseRight); // draw the text to the left of textPoint and the line to the right
+
+	NFmiPoint fontSize(16,16);
+	envi.SetFontSize(fontSize);
+
+	boost::shared_ptr<NFmiFastQueryInfo> info = Info();
+	if(info)
 	{
-		NFmiDrawingEnvironment envi;
-		envi.SetPenSize(NFmiPoint(2, 2));
-		FmiDirection oldAligment = itsToolBox->GetTextAlignment();
-		itsToolBox->SetTextAlignment(kBaseRight); // piirret‰‰n teksti vasemmalle textPoint:ista ja viiva oikealle
+		NFmiRect frame(GetFrame());
+		NFmiPoint textPoint(frame.TopLeft());
+		double heightInc = itsToolBox->SY(15);
+		double lineLength = frame.Width()/18*1;
+		// keep the legend size but move it so that its right edge is on the data rect's right edge
+		double endPointX1 = itsDataRect.Right();
+		textPoint.X(endPointX1 - lineLength);
+		textPoint.Y(textPoint.Y() + heightInc);
 
-		NFmiPoint fontSize(16,16);
-		envi.SetFontSize(fontSize);
-
-		boost::shared_ptr<NFmiFastQueryInfo> info = Info();
-		if(info)
+		for(size_t i = 0; (i < theFoundProducerNames.size()) && (i < theUsedColors.size()); i++)
 		{
-			NFmiRect frame(GetFrame());
-			NFmiPoint textPoint(frame.TopLeft());
-			textPoint.X(textPoint.X() + frame.Width()/7*6);
-			double heightInc = itsToolBox->SY(15);
-			double endPointX1 = textPoint.X() + frame.Width()/18*1;
+			envi.SetFrameColor(theUsedColors[i]);
+			NFmiText text(textPoint, theFoundProducerNames[i].c_str(), true, 0, &envi);
+			itsToolBox->Convert(&text);
+
+			NFmiLine line1(NFmiPoint(textPoint.X(), textPoint.Y() - heightInc/2.), NFmiPoint(endPointX1, textPoint.Y() - heightInc/2.), 0, &envi);
+			itsToolBox->Convert(&line1);
+
 			textPoint.Y(textPoint.Y() + heightInc);
-			int currentLineIndex = 0;
+		}
 
-			for(size_t i = 0; (i < theFoundProducerNames.size()) && (i < theUsedColors.size()); i++)
-			{
-				envi.SetFrameColor(theUsedColors[i]);
-				NFmiText text(textPoint, theFoundProducerNames[i].c_str(), true, 0, &envi);
-				itsToolBox->Convert(&text);
-
-				NFmiLine line1(NFmiPoint(textPoint.X(), textPoint.Y() - heightInc/2.), NFmiPoint(endPointX1, textPoint.Y() - heightInc/2.), 0, &envi);
-				itsToolBox->Convert(&line1);
-
-				textPoint.Y(textPoint.Y() + heightInc);
-			}
-
-			// laitetaan tarvittaessa myˆs help editor data legend‰ n‰kyviin
-			if(itsCtrlViewDocumentInterface->HelpEditorSystem().Use())
-			{
-				NFmiProducer prod(NFmiProducerSystem::gHelpEditorDataProdId, "helpdata");
-                DrawExistingDataLegend(prod, NFmiInfoData::kEditingHelpData, itsDrawParam, itsCtrlViewDocumentInterface->HelpEditorSystem().HelpColor(), heightInc, endPointX1, textPoint, envi);
-			}
-            // Virallisen operatiivisen datan legenda
-            NFmiProducer prod(0, "operational");
-            DrawExistingDataLegend(prod, NFmiInfoData::kKepaData, itsDrawParam, g_OfficialDataColor, heightInc, endPointX1, textPoint, envi);
-        }
-		itsToolBox->SetTextAlignment(oldAligment);
+		// show also the help editor data legend when needed
+		if(itsCtrlViewDocumentInterface->HelpEditorSystem().Use())
+		{
+			NFmiProducer prod(NFmiProducerSystem::gHelpEditorDataProdId, "helpdata");
+			DrawExistingDataLegend(prod, NFmiInfoData::kEditingHelpData, itsDrawParam, itsCtrlViewDocumentInterface->HelpEditorSystem().HelpColor(), heightInc, endPointX1, textPoint, envi);
+		}
+		// legend of the official operational data
+		NFmiProducer prod(0, "operational");
+		DrawExistingDataLegend(prod, NFmiInfoData::kKepaData, itsDrawParam, g_OfficialDataColor, heightInc, endPointX1, textPoint, envi);
 	}
+	itsToolBox->SetTextAlignment(oldAligment);
 }
 
 void NFmiTimeSerialView::DrawExistingDataLegend(const NFmiProducer &producer, NFmiInfoData::Type dataType, boost::shared_ptr<NFmiDrawParam> &drawParam, const NFmiColor &color, double heightIncrement, double endPointX, NFmiPoint &legendPlaceInOut, NFmiDrawingEnvironment &drawingEnvironmentInOut)
@@ -1160,9 +1164,12 @@ void NFmiTimeSerialView::DrawStationNameLegend(const NFmiLocation* theLocation, 
 		theEnvi.SetFontSize(theFontSize);
 		NFmiString tmpStr(thePreLocationString);
 		tmpStr += theLocation->GetName();
-		tmpStr += " (";
-		tmpStr += std::to_string(theLocation->GetIdent());
-		tmpStr += ")";
+		if(theLocation->GetIdent() != 0)
+		{
+			tmpStr += " (";
+			tmpStr += std::to_string(theLocation->GetIdent());
+			tmpStr += ")";
+		}
 
 		if(theDistanceInMeters != kFloatMissing)
 		{
@@ -1563,8 +1570,6 @@ void NFmiTimeSerialView::DrawModifyingUnit(void)
 		{
 			{
 				str += NFmiString(itsCtrlViewDocumentInterface->TimeSerialViewDrawParamList()->Current()->Unit());
-				std::string locString(::GetDictionaryString("TimeSerialViewUnitString"));
-				str += NFmiString(locString);
 			}
 		}
 
@@ -1725,7 +1730,25 @@ void NFmiTimeSerialView::DrawStationDataStationNameLegend(boost::shared_ptr<NFmi
 	{
 		itsToolBox->UseClipping(false);
 		NFmiLocation loc = *info->Location();
-		if(info->Grid())
+		// In control-point mode with an active CP, label this location legend with the CP id and the
+		// active CP's own location ("CP <id>: lat,lon", id is 1-based) instead of the plain grid
+		// "loc: lat,lon". The lat/lon is formatted exactly like the grid case below.
+		int activeCpIndex = itsCtrlViewDocumentInterface->MetEditorOptionsData().ControlPointMode()
+			? itsCtrlViewDocumentInterface->CPManager()->GetActiveCpIndex() : -1;
+		if(activeCpIndex >= 0)
+		{
+			const NFmiPoint &cpLatlon = itsCtrlViewDocumentInterface->CPManager()->ActiveCPLatLon();
+			string locName;
+			locName += "CP ";
+			locName += std::to_string(activeCpIndex + 1); // CP id shown to the user starts from 1, not 0
+			locName += ": ";
+			locName += CtrlViewUtils::GetLatitudeMinuteStr(cpLatlon.Y(), 0);
+			locName += ",";
+			locName += CtrlViewUtils::GetLongitudeMinuteStr(cpLatlon.X(), 0);
+			loc.SetName(locName);
+			loc.SetIdent(0); // don't let DrawStationNameLegend append a station ident after the CP text
+		}
+		else if(info->Grid())
 		{
 			string locName;
 			locName += "loc: ";
@@ -1775,7 +1798,7 @@ void NFmiTimeSerialView::DrawSelectedStationData(boost::shared_ptr<NFmiFastQuery
 
 void NFmiTimeSerialView::DrawHelperObservationData(const NFmiPoint &theLatlon)
 {
-    if(itsCtrlViewDocumentInterface->IsOperationalModeOn() && itsCtrlViewDocumentInterface->ShowHelperData1InTimeSerialView())
+    if(itsCtrlViewDocumentInterface->ShowHelperData1InTimeSerialView())
     {
         // Ei piirret‰ jos valittu data on havainto tyyppista ja synop tuottajalta, koska k‰yr‰ on jo piirrettyn‰ valittuna datana edell‰.
         // Jos se piirret‰‰n uudestaan originaali (sininen) k‰yr‰ peittyisi nyt punaisella k‰yr‰ll‰
@@ -1971,8 +1994,14 @@ void NFmiTimeSerialView::DrawCPReferenceLines_SetLineOptions(boost::shared_ptr<N
         cpDrawingOptions.currentDataEnvi.SetPenSize(cpDrawingOptions.normalLine);
         cpDrawingOptions.changeDataEnvi.SetPenSize(cpDrawingOptions.normalChangeLine);
     }
-    cpDrawingOptions.currentDataEnvi.SetFrameColor(gCPHelpColors[cpDrawingOptions.currentLineIndex]);
-    cpDrawingOptions.changeDataEnvi.SetFrameColor(gCPHelpColors[cpDrawingOptions.currentLineIndex]);
+
+	// Active CP point is drawn with the first color always
+    auto usedLineIndex = cpManager->IsActivateCP() ? 0 : cpDrawingOptions.currentLineIndex;
+	if(usedLineIndex >= 0 && usedLineIndex < static_cast<int>(gCPHelpColors.size()))
+	{
+		cpDrawingOptions.currentDataEnvi.SetFrameColor(gCPHelpColors[usedLineIndex]);
+		cpDrawingOptions.changeDataEnvi.SetFrameColor(gCPHelpColors[usedLineIndex]);
+	}
 }
 
 bool NFmiTimeSerialView::DrawCPReferenceLines_IsCpDrawn(boost::shared_ptr<NFmiEditorControlPointManager> &cpManager)
@@ -2039,6 +2068,17 @@ void NFmiTimeSerialView::DrawCPReferenceLines_DrawCpLocation(boost::shared_ptr<N
     {
         // Piirret‰‰n mahdolliset apu havainnot viimeiseksi, jotta erilaiset parvet eiv‰t peitt‰isi niit‰ (t‰st‰ tulee aina vain yksi k‰yr‰, joten se ei peit‰ paljoa)
         DrawHelperObservationData(cpManager->LatLon());
+        // Draw the "CP <id>: lat,lon" location legend for the active CP. DrawStationDataStationNameLegend
+        // is otherwise only reached from the non-CP (normal) drawing path, so without this explicit call
+        // the CP location legend would never appear while control-point-mode drawing is done.
+        // Use a copy of the CP line environment so the legend's font-size change does not leak into the
+        // CP index legend drawn right after this (DrawCPReferenceLines_DrawLegend reuses currentDataEnvi).
+        boost::shared_ptr<NFmiFastQueryInfo> activeCpInfo = Info();
+        if(activeCpInfo)
+        {
+            NFmiDrawingEnvironment cpLocationLegendEnvi(cpDrawingOptions.currentDataEnvi);
+            DrawStationDataStationNameLegend(activeCpInfo, cpManager->LatLon(), 1, cpLocationLegendEnvi);
+        }
     }
 }
 
@@ -2060,6 +2100,12 @@ void NFmiTimeSerialView::DrawCPReferenceLines_ForCurrentCp(boost::shared_ptr<NFm
 void NFmiTimeSerialView::DrawCPReferenceLines_DrawAllCps(bool drawModificationLines)
 {
     CpDrawingOptions cpDrawingOptions(MakeNormalCpLineDrawOptions(), MakeChangeCpLineDrawOptions(), GetFrame(), itsToolBox);
+    // Place the CP line legend (index text + colour line markers) so its center is at 2/3 of the data rect's width
+    double cpLegendCenterX = itsDataRect.Left() + itsDataRect.Width() * 2. / 3.;
+    double cpLegendShiftX = cpLegendCenterX - (cpDrawingOptions.textPoint.X() + cpDrawingOptions.endPointX2) / 2.;
+    cpDrawingOptions.textPoint.X(cpDrawingOptions.textPoint.X() + cpLegendShiftX);
+    cpDrawingOptions.endPointX1 += cpLegendShiftX;
+    cpDrawingOptions.endPointX2 += cpLegendShiftX;
     // piirret‰‰n teksti vasemmalle textPoint:ista ja viiva oikealle
     ToolBoxStateRestorer toolBoxStateRestorer(*itsToolBox, kBaseRight, itsToolBox->UseClipping());
 
@@ -2069,8 +2115,9 @@ void NFmiTimeSerialView::DrawCPReferenceLines_DrawAllCps(bool drawModificationLi
     {
         for(CPMan->ResetCP(); CPMan->NextCP();)
         {
-            if(cpDrawingOptions.currentLineIndex >= gMaxHelpCPDrawed)
-                break; // ei piirret‰ enemp‰‰ referenssi viivoja
+            // Let's draw legend on for x first CP point and always for the active CP point.
+            if(!CPMan->IsActivateCP() && cpDrawingOptions.currentLineIndex >= gMaxHelpCPDrawed)
+                continue;
 
             DrawCPReferenceLines_ForCurrentCp(CPMan, info, cpDrawingOptions, drawModificationLines);
         }
@@ -2692,18 +2739,43 @@ static NFmiTimeBag GetScannedTimes(const NFmiTimeBag &theViewTimes)
 	return NFmiTimeBag(newFirstTime, newLastTime, stepInMinutes);
 }
 
+// RAII guard that sets itsOperationMode to the wanted temporary mode and guarantees
+// that the original mode is restored on scope exit, even if the scanning / CSV drawing throws.
+namespace
+{
+	class TimeSerialOperationModeGuard
+	{
+		TimeSerialOperationMode &itsModeRef;
+		TimeSerialOperationMode itsOriginalMode;
+	public:
+		TimeSerialOperationModeGuard(TimeSerialOperationMode &modeRef, TimeSerialOperationMode newMode)
+			:itsModeRef(modeRef)
+			,itsOriginalMode(modeRef)
+		{
+			itsModeRef = newMode;
+		}
+		~TimeSerialOperationModeGuard()
+		{
+			itsModeRef = itsOriginalMode;
+		}
+		TimeSerialOperationModeGuard(const TimeSerialOperationModeGuard &) = delete;
+		TimeSerialOperationModeGuard &operator=(const TimeSerialOperationModeGuard &) = delete;
+	};
+}
+
 bool NFmiTimeSerialView::AutoAdjustValueScale(void)
 {
-	itsOperationMode = TimeSerialOperationMode::MinMaxScanMode;
-	itsAutoAdjustMinMaxValues.Clear();
-	itsScannedLatlonPoints = GetViewedLatlonPoints();
-	itsAutoAdjustScanTimes = ::GetScannedTimes(GetViewLimitingTimes());
-	itsInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, true);
-	DrawSelectedStationData(); // skannataan piirto-systeemi l‰pi ilman piirtoa etsien min/max arvoja eri datoista
-	itsToolBox->UseClipping(false);
-	itsDrawingEnvironment.EnableFill();
-	
-	itsOperationMode = TimeSerialOperationMode::NormalDrawMode;
+	{
+		// Guarantee that the operation mode is restored even if the min/max scan throws
+		TimeSerialOperationModeGuard operationModeGuard(itsOperationMode, TimeSerialOperationMode::MinMaxScanMode);
+		itsAutoAdjustMinMaxValues.Clear();
+		itsScannedLatlonPoints = GetViewedLatlonPoints();
+		itsAutoAdjustScanTimes = ::GetScannedTimes(GetViewLimitingTimes());
+		itsInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, true);
+		DrawSelectedStationData(); // scan the drawing system through without drawing, looking for min/max values from different data
+		itsToolBox->UseClipping(false);
+		itsDrawingEnvironment.EnableFill();
+	}
 
 	float minValue = itsAutoAdjustMinMaxValues.MinValue();
 	float maxValue = itsAutoAdjustMinMaxValues.MaxValue();
@@ -3496,13 +3568,13 @@ NFmiRect NFmiTimeSerialView::CalcModifyingUnitRect(void)
 {
 	NFmiRect timeAxisRect(CalcTimeAxisRect());
 	NFmiPoint place(timeAxisRect.TopRight());
-	place.X(place.X() - timeAxisRect.Width() * 0.02);
 	double rectHeight = timeAxisRect.Width()/30.;
 	NFmiPoint size(0, rectHeight);
 	NFmiRect rect;
 	rect.Place(place);
 	rect.Size(size);
 	rect.Right(GetFrame().Right());
+	rect.Left(rect.Right() - timeAxisRect.Width() * 0.04); // narrow box, only the short unit text is shown now (no more "-unit" suffix)
 	return rect;
 }
 
@@ -3927,8 +3999,13 @@ void NFmiTimeSerialView::DrawModelRunsPlume(const NFmiPoint &theLatLonPoint, NFm
 				}
 			}
 		}
+		catch(std::exception &e)
+		{
+			itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+		}
 		catch(...)
 		{
+			itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Unknown error in ") + __FUNCTION__, "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
 		}
 		*itsDrawParam = origDrawParam; // palutetaan lopuksi originaali piirto-ominaisuudet
 	}
@@ -4761,8 +4838,13 @@ std::string NFmiTimeSerialView::GetEditingRelatedDataToolTipText(const NFmiPoint
 
 NFmiPoint NFmiTimeSerialView::GetTooltipLatlon() const
 {
-    // 1. If control-point mode, return active CP latlon
-    if(DoControlPointModeDrawing())
+    // 1. In control-point mode the active CP is the reference point, but only for the edited data
+    //    itself (that is what control points modify). For non-edited reference rows (model /
+    //    observation data) we keep using the normal pointed / selected map location, the same way
+    //    as outside CP mode, so their curve and the observation/model legends are always drawn and
+    //    describe the pointed location - instead of following the active CP, which is often not set
+    //    (ActiveCPLatLon() then returns a missing latlon and neither legend gets drawn at all).
+    if(DoControlPointModeDrawing() && itsDrawParam->DataType() == NFmiInfoData::kEditable)
         return itsCtrlViewDocumentInterface->CPManager()->ActiveCPLatLon();
 
     // 2. If non-edited data selected
@@ -4826,10 +4908,12 @@ std::string NFmiTimeSerialView::MakeCsvDataString()
 	itsInfo = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, false, true);
 	if(itsInfo)
 	{
-		itsOperationMode = TimeSerialOperationMode::CsvDataGeneration;
-		itsAutoAdjustScanTimes = GetViewLimitingTimes();
-		DrawSelectedStationData();
-		itsOperationMode = TimeSerialOperationMode::NormalDrawMode;
+		{
+			// Guarantee that the operation mode is restored even if the CSV data generation throws
+			TimeSerialOperationModeGuard operationModeGuard(itsOperationMode, TimeSerialOperationMode::CsvDataGeneration);
+			itsAutoAdjustScanTimes = GetViewLimitingTimes();
+			DrawSelectedStationData();
+		}
 		if(!itsCsvGenerationTimes.empty())
 		{
 			auto headerString = MakeTimeSerialCsvHeaderString();

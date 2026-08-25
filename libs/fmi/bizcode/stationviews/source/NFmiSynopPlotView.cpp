@@ -360,8 +360,13 @@ void NFmiSynopPlotView::DrawSynopPlot(NFmiToolBox * theGTB, const NFmiLocation &
 			DrawSynopFontValues(info, theRect, fWindDrawed);
 		}
 	}
+	catch(std::exception &e)
+	{
+		itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+	}
 	catch(...)
 	{
+		itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Unknown error in ") + __FUNCTION__, "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
 		// ei tehd‰ mit‰‰n, nyt poikkeuksen yhteydess‰ voidaan kuitenkin asettaa originaali fontti koko takaisin
 	}
 	synopSettings.FontSize(oldFontSize);

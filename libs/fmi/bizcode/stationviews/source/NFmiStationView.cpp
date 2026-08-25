@@ -4040,8 +4040,13 @@ void NFmiStationView::SbdCollectSymbolDrawData(bool doStationPlotOnly)
 				SbdCollectNormalSymbolDrawData(doStationPlotOnly);
 		}
 	}
+	catch(std::exception &e)
+	{
+		itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+	}
 	catch(...)
 	{
+		itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Unknown error in ") + __FUNCTION__, "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
 	}
 }
 

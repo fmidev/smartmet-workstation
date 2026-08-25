@@ -723,10 +723,12 @@ static std::string GetWantedTimeConceptualURLStr(CtrlViewDocumentInterface *theC
 	{
 		x = 1;
 		string errStr = e.what();
+		theCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
 	}
 	catch(...)
 	{
 		x = 2;
+		theCtrlViewDocumentInterface->LogAndWarnUser(std::string("Unknown error in ") + __FUNCTION__, "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
 	}
 	
 	return wantedUrlStr;
@@ -876,8 +878,13 @@ void NFmiConceptualDataView::DecodeConceptualWomlDataFromStr(const std::string &
 				if(tmpData.fWomlOk)
 					itsConceptualObjectDatas.push_back(tmpData);
 			}
+			catch(std::exception &e)
+			{
+				itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+			}
 			catch(...)
 			{
+				itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Unknown error in ") + __FUNCTION__, "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
 				// jos oli virheellinen node, ei lopeteta kuitenkaan
 			}
 		}
@@ -904,8 +911,13 @@ void NFmiConceptualDataView::DecodeConceptualPreWomlDataFromStr(const std::strin
 				tmpData.InitializeFromPartNode(aNode);
 				itsConceptualObjectDatas.push_back(tmpData);
 			}
+			catch(std::exception &e)
+			{
+				itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+			}
 			catch(...)
 			{
+				itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Unknown error in ") + __FUNCTION__, "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
 				// jos oli virheellinen node, ei lopeteta kuitenkaan
 			}
 		}
@@ -934,8 +946,13 @@ void NFmiConceptualDataView::Draw(NFmiToolBox *theGTB)
 		for(size_t j=0; j<itsConceptualObjectDatas.size(); j++)
 			DrawConseptualData(itsConceptualObjectDatas[j]);
 	}
+	catch(std::exception &e)
+	{
+		itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+	}
 	catch(...)
 	{
+		itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Unknown error in ") + __FUNCTION__, "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
 	}
 	CleanGdiplus(); // t‰t‰ pit‰‰ kutsua piirron lopuksi InitializeGdiplus -metodin vastin parina.
 }
@@ -1289,8 +1306,13 @@ std::string NFmiConceptualDataView::ComposeToolTipText(const NFmiPoint & theRela
 		if(itsConceptualObjectDatas.size() == 0 || (itsConceptualObjectDatas.size() > 0 && itsConceptualObjectDatas[0].itsValidTime != itsTime))
 			GetConceptualData(itsTime); // tarkistetaan joska lˆytyisi k‰siteanalyysi dataa
 	}
+	catch(std::exception &e)
+	{
+		itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Error in ") + __FUNCTION__ + ": " + e.what(), "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
+	}
 	catch(...)
 	{
+		itsCtrlViewDocumentInterface->LogAndWarnUser(std::string("Unknown error in ") + __FUNCTION__, "", CatLog::Severity::Error, CatLog::Category::Visualization, true);
 		// ei tehd‰ mit‰‰n, poikkeus heitet‰‰n mm. jos ei ole mit‰‰n dataa kyseiseen aikaan
 	}
 
