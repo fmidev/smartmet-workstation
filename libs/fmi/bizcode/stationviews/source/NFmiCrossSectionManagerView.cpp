@@ -319,10 +319,14 @@ NFmiRect NFmiCrossSectionManagerView::CalcFooterRect(void)
 {
 	NFmiRect rr(GetFrame());
 	// HUOM! Piirrettäessä kuvaa näytölle, tulee mukaan aikakontrolli ikkuna, mutta printatessa se jää pois, jos kyse normaalista moodista
-	// Footer holds one text line plus the time control view. The time control view content is
-	// sized in mm * pixelsPerMM (DPI-aware), so on screen reserve the footer height the same
-	// DPI-aware way instead of a fixed pixel amount, otherwise it gets clipped on high-DPI /
-	// scaled displays. 17.2 mm corresponds to the old fixed 65 px at 96 DPI (100 % scaling).
+	// The footer holds one fixed-height text line (see CalcTimeControlViewRect's spaceForText)
+	// stacked above the time control's time axis. That axis draws tick marks plus three text rows
+	// (hour, date, weekday, see NFmiAdjustedTimeScaleView::DrawScale). The text rows scale with
+	// DPI / Windows display scaling via the time-scale font, while the tick band and the text line
+	// above are fixed device pixels that do NOT scale. A purely mm/DPI-proportional reservation
+	// therefore comes up short at low DPI (100 % scaling) - here even more than in the time-serial
+	// view, because of the extra fixed text line - and clips the bottom weekday row. So reserve the
+	// footer the same way the content is built: fixed text line + fixed tick band + font rows.
 	double emptySpace;
 	if(itsToolBox->GetDC()->IsPrinting())
 	{
@@ -333,9 +337,15 @@ NFmiRect NFmiCrossSectionManagerView::CalcFooterRect(void)
 	}
 	else
 	{
-		double pixelsPerMM_y = itsCrossSectionSystem->GetGraphicalInfo().itsPixelsPerMM_y;
-		if(pixelsPerMM_y > 0)
-			emptySpace = itsToolBox->SY(FmiRound(17.2 * pixelsPerMM_y));
+		double pixelsPerMM_x = itsCrossSectionSystem->GetGraphicalInfo().itsPixelsPerMM_x;
+		if(pixelsPerMM_x > 0)
+		{
+			const double textLineInPixels = 15. * itsDrawSizeFactorY; // matches CalcTimeControlViewRect spaceForText
+			const double tickMarkBandInPixels = 9.;                   // NFmiTimeScaleView tick length (border width 3 * 3), fixed device pixels
+			const double textRowsFactor = 2.7;                        // hour + date + weekday rows below the tick band (~2.4 needed, rest is margin)
+			double fontSizeInPixels = CtrlViewUtils::CalcTimeScaleFontSizeInPixels(pixelsPerMM_x).Y();
+			emptySpace = itsToolBox->SY(FmiRound(textLineInPixels + tickMarkBandInPixels + fontSizeInPixels * textRowsFactor));
+		}
 		else
 			emptySpace = itsToolBox->SY(FmiRound(65 * itsDrawSizeFactorY));
 	}
