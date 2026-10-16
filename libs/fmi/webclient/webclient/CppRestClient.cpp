@@ -16,7 +16,7 @@ namespace
         auto loggingMessage = domain;
         // Halutaan välttää tupla kenoviiva domain:in ja request:in välissä lokiviestiin,
         // jos domain loppuu ja request alkaa kenoviivalla.
-        if(domain.back() == '/' && request.front() == '/' && request.empty() == false)
+        if(!domain.empty() && !request.empty() && domain.back() == '/' && request.front() == '/')
             loggingMessage += std::string(request.begin() + 1, request.end());
         else
             loggingMessage += request;
@@ -48,11 +48,13 @@ namespace Web
     {
         ::makeTraceLevelRequestLogging(domain, request);
             return bManager_->addTask(
-                [&,
-                domain = domain,
-                request = request]
+                [this, domain, request, timeoutInSeconds]
                     {
                             auto response = tmp(domain, request, timeoutInSeconds);
+                            if(response.status_code() < 200 || response.status_code() >= 300)
+                            {
+                                throw std::runtime_error("HTTP " + std::to_string(response.status_code()) + " from " + domain);
+                            }
                             auto bodyStream = response.body();
                             Concurrency::streams::container_buffer<std::string> inStringBuffer;
                             bodyStream.read_to_end(inStringBuffer).wait();
@@ -62,23 +64,22 @@ namespace Web
 
     web::http::http_response CppRestClient::tmp(const std::string& domain, const std::string& request, int timeoutInSeconds) const
     {
-        auto client = web::http::client::http_client(to_string_t(domain), createConfig(domain, timeoutInSeconds));
-        auto responseFut = client.request(web::http::methods::GET, to_string_t(request), tokenSource_.get_token());
         try
         {
-            return responseFut.get();
+            auto client = web::http::client::http_client(to_string_t(domain), createConfig(false, timeoutInSeconds));
+            return client.request(web::http::methods::GET, to_string_t(request), tokenSource_.get_token()).get();
         }
-        catch(const std::exception& e)
+        catch(const web::http::http_exception& e)
         {
-            if(!needsProxy(domain))
-            {
-                useProxy_.insert(domain);
-                return tmp(domain, request, timeoutInSeconds);
-            }
-            else
-            {
-                throw e;
-            }
+            // A transient failure must not change routing for subsequent requests.
+            if(proxyUrl_.empty() || tokenSource_.get_token().is_canceled() || bManager_->isKillSignalSet())
+                throw;
+
+            CatLog::logMessage("Request to " + domain + " failed on the default route: " + e.what()
+                + "; retrying once with the configured proxy (timeout " + std::to_string(timeoutInSeconds) + "s)",
+                CatLog::Severity::Warning, CatLog::Category::NetRequest);
+            auto client = web::http::client::http_client(to_string_t(domain), createConfig(true, timeoutInSeconds));
+            return client.request(web::http::methods::GET, to_string_t(request), tokenSource_.get_token()).get();
         }
     }
 
@@ -87,16 +88,11 @@ namespace Web
         tokenSource_.cancel();
     }
 
-    bool CppRestClient::needsProxy(const std::string& domain) const
-    {
-        return useProxy_.find(domain) != useProxy_.cend();
-    }
-
-    web::http::client::http_client_config CppRestClient::createConfig(const std::string& domain, int timeoutInSeconds) const
+    web::http::client::http_client_config CppRestClient::createConfig(bool useProxy, int timeoutInSeconds) const
     {
         auto client_config = web::http::client::http_client_config{};
 		client_config.set_validate_certificates(false);
-        if(needsProxy(domain))
+        if(useProxy)
         {
             client_config.set_proxy(web::web_proxy(to_string_t(proxyUrl_)));
         }

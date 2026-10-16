@@ -12,6 +12,7 @@
 #include <cppext/split.h>
 #include <cppback/background-manager.h>
 
+#include <atomic>
 #include <chrono>
 #include <map>
 #include <string>
@@ -51,7 +52,7 @@ namespace Wms
         int getCapabilitiesTimeoutInSeconds_;
         // Jos tämä muuttuu true:ksi, se tarkoittaa että startFetchingCapabilitiesInBackground
         // metodi on mennyt kerran läpi, löytyi servereiltä mitään järkevää tai ei.
-        bool getCapabilitiesHaveBeenRetrieved_ = false;
+        std::atomic_bool getCapabilitiesHaveBeenRetrieved_{false};
     public:
         CapabilitiesHandler(
             std::unique_ptr<Web::Client> client,
@@ -65,6 +66,7 @@ namespace Wms
             );
 
         void startFetchingCapabilitiesInBackground();
+        void cancel();
         std::shared_ptr<CapabilitiesHandlerHashes> getHashes() const;
         void setHashes(std::shared_ptr<CapabilitiesHandlerHashes> hashesPtr);
         std::shared_ptr<CapabilityTree> getCapabilityTree() const;

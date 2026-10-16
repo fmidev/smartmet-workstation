@@ -124,11 +124,13 @@ namespace Wms
     void WmsSupport::kill()
     {
         setToBeKilled_ = true;
+        bManager_->kill();
+        if(capabilitiesHandler_)
+            capabilitiesHandler_->cancel();
         for(auto& client : dynamicClients_)
         {
             client.second->kill();
         }
-        bManager_->kill();
     }
 
     bool WmsSupport::isDead(const std::chrono::milliseconds& waitTime) const

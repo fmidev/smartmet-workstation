@@ -42,7 +42,6 @@ namespace Wms
                 }
                 std::string responseStr;
                 auto httpResponseFut = client.queryFor(baseUriStr, requestStr, getCapabilitiesTimeoutInSeconds);
-                httpResponseFut.wait();
                 responseStr = httpResponseFut.get();
 
                 // Lisätty testauskoodeja sekä olemassa olevan getCapabilities responsin tiedostotalletukseen että sieltä lukuun. Pidä normaalisti kommenteissa!!
@@ -66,7 +65,7 @@ namespace Wms
             {
                 // Errors are logged always
                 CatLog::logMessage(std::string(__FUNCTION__) + " request failed: " + e.what(), CatLog::Severity::Error, CatLog::Category::NetRequest);
-                return "";
+                throw;
             }
         }
 
@@ -138,6 +137,7 @@ namespace Wms
 
     bool CapabilitiesHandler::isCapabilityTreeAvailable() const
     {
+        std::lock_guard<std::mutex> lock(capabilityTreeMutex_);
         return capabilityTree_ != nullptr;
     }
 
@@ -146,12 +146,17 @@ namespace Wms
         return getCapabilitiesHaveBeenRetrieved_;
     }
 
+    void CapabilitiesHandler::cancel()
+    {
+        client_->cancel();
+    }
+
     void CapabilitiesHandler::startFetchingCapabilitiesInBackground()
     {
-        bManager_->addTask([&]()
+        bManager_->addTask([this]()
             {
                 std::string workingThreadName = "GetCapabilityTree";
-                while(true)
+                while(!bManager_->isKillSignalSet())
                 {
                     auto children = std::vector<std::unique_ptr<CapabilityTree>>{};
                     bool foundAnyWmsServerData = false;
@@ -161,6 +166,8 @@ namespace Wms
 
                     for(auto& serverKV : servers_)
                     {
+                        if(bManager_->isKillSignalSet())
+                            return;
                         const auto& server = serverKV.second;
                         NFmiLedLightStatusBlockReporter blockReporter(NFmiLedChannel::WmsData, workingThreadName, MakeLedChannelGetCapabilityTreeReport(server.generic.host));
                         auto query = QueryBuilder{}.setScheme(server.generic.scheme)
@@ -188,7 +195,7 @@ namespace Wms
                         {
                             std::string errorMessage = "Error with dynamic Wms server '";
                             errorMessage += server.generic.host;
-                            errorMessage += "', while parsing getCapabilities response: ";
+                            errorMessage += "', while fetching or parsing getCapabilities response: ";
                             errorMessage += e.what();
                             CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
                         }
@@ -202,7 +209,18 @@ namespace Wms
                     getCapabilitiesHaveBeenRetrieved_ = true;
                     if(foundAnyWmsServerData)
                     {
-                        getCapabilitiesUpdateCallbackWrapper();
+                        try
+                        {
+                            getCapabilitiesUpdateCallbackWrapper();
+                        }
+                        catch(const std::exception& e)
+                        {
+                            CatLog::logMessage(std::string("GetCapabilities update callback failed: ") + e.what(), CatLog::Severity::Error, CatLog::Category::NetRequest, true);
+                        }
+                        catch(...)
+                        {
+                            CatLog::logMessage("GetCapabilities update callback failed with an unknown exception", CatLog::Severity::Error, CatLog::Category::NetRequest, true);
+                        }
                     }
 
                     using namespace std::literals;
