@@ -10,6 +10,9 @@ class ApplicationInterfaceForSmartMet : public ApplicationInterface
 {
 public:
     ApplicationInterfaceForSmartMet();
+    void PostWmsCapabilitiesUpdated() override;
+    static void RegisterWmsNotificationWindow(HWND window);
+    static void UnregisterWmsNotificationWindow();
 	~ApplicationInterfaceForSmartMet() = default;
 
     void ParameterSelectionSystemUpdateTimerStart(int waitTimeInSeconds) override; // CMainFrame (CMainFrame*)AfxGetMainWnd()

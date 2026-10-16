@@ -190,6 +190,8 @@ public:
     bool LoadStaticHelpData(void);
     AddParams::ParameterSelectionSystem& ParameterSelectionSystem();
     void UpdateParameterSelectionSystem();
+    // Called on the UI thread by the posted WMS notification.
+    void WmsSupportHasDoneGetCapabilitiesQuery();
 	boost::shared_ptr<NFmiFastQueryInfo> GetBestSuitableModelFractileData(boost::shared_ptr<NFmiFastQueryInfo>& usedOriginalInfo);
 	boost::shared_ptr<NFmiFastQueryInfo> GetModelClimatologyData(const NFmiLevel& theLevel);
     bool IsWorkingDataSaved();

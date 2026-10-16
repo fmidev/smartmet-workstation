@@ -8,9 +8,14 @@
 #include "NFmiEditMapGeneralDataDoc.h"
 #include "NFmiBetaProductSystem.h"
 #include "NFmiMacroParamDataGenerator.h"
+#include <mutex>
 
 namespace
 {
+    std::mutex wmsNotificationMutex;
+    HWND wmsNotificationWindow = nullptr;
+    bool wmsNotificationPending = false;
+    bool wmsNotificationsStopped = false;
     class IconHandler
     {
         HICON normalSmallIcon_ = nullptr;
@@ -88,6 +93,38 @@ namespace
 
 ApplicationInterfaceForSmartMet::ApplicationInterfaceForSmartMet()
 {
+}
+
+void ApplicationInterfaceForSmartMet::PostWmsCapabilitiesUpdated()
+{
+    std::lock_guard<std::mutex> lock(wmsNotificationMutex);
+    if(wmsNotificationsStopped)
+        return;
+    wmsNotificationPending = true;
+    if(wmsNotificationWindow)
+    {
+        if(::PostMessage(wmsNotificationWindow, WM_WMS_CAPABILITIES_UPDATED, 0, 0))
+            wmsNotificationPending = false;
+        else
+            CatLog::logMessage("Could not post WMS capabilities update to the main window", CatLog::Severity::Error, CatLog::Category::NetRequest);
+    }
+}
+
+void ApplicationInterfaceForSmartMet::RegisterWmsNotificationWindow(HWND window)
+{
+    std::lock_guard<std::mutex> lock(wmsNotificationMutex);
+    wmsNotificationWindow = window;
+    wmsNotificationsStopped = false;
+    if(wmsNotificationPending && ::PostMessage(window, WM_WMS_CAPABILITIES_UPDATED, 0, 0))
+        wmsNotificationPending = false;
+}
+
+void ApplicationInterfaceForSmartMet::UnregisterWmsNotificationWindow()
+{
+    std::lock_guard<std::mutex> lock(wmsNotificationMutex);
+    wmsNotificationWindow = nullptr;
+    wmsNotificationPending = false;
+    wmsNotificationsStopped = true;
 }
 
 void ApplicationInterfaceForSmartMet::ParameterSelectionSystemUpdateTimerStart(int waitTimeInSeconds)
