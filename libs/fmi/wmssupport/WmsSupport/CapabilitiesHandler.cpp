@@ -11,7 +11,7 @@
 
 #include <catlog/catlog.h>
 #include <cppback/background-manager.h>
-#include <boost/property_tree/xml_parser.hpp>
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -23,11 +23,17 @@ namespace Wms
 {
     namespace
     {
-        boost::property_tree::ptree parseXmlToPropertyTree(const std::string& xml)
+        std::unique_ptr<CapabilityTree> cloneCapabilityTree(const CapabilityTree& tree)
         {
-            auto pTree = boost::property_tree::ptree{};
-            boost::property_tree::read_xml(std::stringstream{ xml }, pTree);
-            return pTree;
+            if(const auto* node = dynamic_cast<const CapabilityNode*>(&tree))
+            {
+                std::vector<std::unique_ptr<CapabilityTree>> children;
+                children.reserve(node->children.size());
+                for(const auto& child : node->children)
+                    children.push_back(cloneCapabilityTree(*child));
+                return std::make_unique<CapabilityNode>(node->value, std::move(children));
+            }
+            return std::make_unique<CapabilityLeaf>(tree.value);
         }
 
         std::string fetchCapabilitiesXml(const Web::Client& client, const WmsQuery& query, bool doLogging, bool doVerboseLogging, int getCapabilitiesTimeoutInSeconds)
@@ -156,6 +162,8 @@ namespace Wms
         bManager_->addTask([this]()
             {
                 std::string workingThreadName = "GetCapabilityTree";
+                // Owned only by this worker; published trees are independent copies.
+                std::map<int, std::unique_ptr<CapabilityTree>> lastGoodTrees;
                 while(!bManager_->isKillSignalSet())
                 {
                     auto children = std::vector<std::unique_ptr<CapabilityTree>>{};
@@ -183,13 +191,19 @@ namespace Wms
                         {
                             auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_, server.acceptTimeDimensionalLayersOnly };
                             auto xml = fetchCapabilitiesXml(*client_, query, server.logFetchCapabilitiesRequest, server.doVerboseLogging, getCapabilitiesTimeoutInSeconds_);
-                            changedLayers_.changedLayers.clear();
-                            children.push_back(capabilityTreeParser.parseXmlGeneral(xml, workingHashesPtr->getHashes(), changedLayers_));
+                            // Parsing must not modify published hashes or change-detection history.
+                            std::map<long, std::map<long, LayerInfo>> serverHashes;
+                            auto candidateChanges = changedLayers_;
+                            candidateChanges.changedLayers.clear();
+                            auto candidateTree = capabilityTreeParser.parseXmlGeneral(xml, serverHashes, candidateChanges);
+                            if(!candidateChanges.changedLayers.empty())
+                                cacheDirtyCallback_(server.producer.GetIdent(), candidateChanges.changedLayers);
+
+                            // Replace this producer only after the entire refresh has succeeded.
+                            workingHashesPtr->getHashes()[server.producer.GetIdent()].swap(serverHashes[server.producer.GetIdent()]);
+                            lastGoodTrees[serverKV.first] = std::move(candidateTree);
+                            changedLayers_ = std::move(candidateChanges);
                             foundAnyWmsServerData = true;
-                            if(!changedLayers_.changedLayers.empty())
-                            {
-                                cacheDirtyCallback_(server.producer.GetIdent(), changedLayers_.changedLayers);
-                            }
                         }
                         catch(std::exception& e)
                         {
@@ -197,6 +211,9 @@ namespace Wms
                             errorMessage += server.generic.host;
                             errorMessage += "', while fetching or parsing getCapabilities response: ";
                             errorMessage += e.what();
+                            errorMessage += lastGoodTrees.count(serverKV.first)
+                                ? "; retaining last successful capabilities."
+                                : "; no previous successful capabilities available.";
                             CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
                         }
                         catch(...)
@@ -204,8 +221,20 @@ namespace Wms
                             // Mahdollinen ongelma on jo lokitettu, t‰ll‰ pyrit‰‰n est‰m‰‰n ett‰ poikkeus jonkun serverin k‰sittelyss‰ ei est‰ muiden toimintaa
                         }
                     }
-                    setHashes(workingHashesPtr);
-                    setCapabilityTree(std::make_shared<CapabilityNode>(rootValue_, std::move(children)));
+                    if(bManager_->isKillSignalSet())
+                        return;
+                    for(const auto& serverKV : servers_)
+                    {
+                        auto previous = lastGoodTrees.find(serverKV.first);
+                        if(previous != lastGoodTrees.end())
+                            children.push_back(cloneCapabilityTree(*previous->second));
+                    }
+                    auto newTree = std::make_shared<CapabilityNode>(rootValue_, std::move(children));
+                    {
+                        std::scoped_lock lock(hashesMutex_, capabilityTreeMutex_);
+                        hashesPtr_ = std::move(workingHashesPtr);
+                        capabilityTree_ = std::move(newTree);
+                    }
                     getCapabilitiesHaveBeenRetrieved_ = true;
                     if(foundAnyWmsServerData)
                     {

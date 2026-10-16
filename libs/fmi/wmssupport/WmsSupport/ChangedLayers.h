@@ -27,7 +27,7 @@ namespace Wms
     class ChangedLayers
     {
         std::map<long, std::map<long, std::string>> earlierDataValues_;
-        long producerId_;
+        long producerId_ = 0;
 
     public:
         std::set<LayerInfo> changedLayers;
