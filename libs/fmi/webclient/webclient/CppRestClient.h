@@ -25,7 +25,7 @@ namespace Web
         std::future<std::string> queryFor(const std::string& domain, const std::string& query, int timeoutInSeconds) const final;
         void cancel() const final;
     private:
-       web::http::http_response tmp(const std::string& domain, const std::string& request, int timeoutInSeconds) const;
+       std::string tmp(const std::string& domain, const std::string& request, int timeoutInSeconds) const;
        web::http::client::http_client_config createConfig(bool useProxy, int timeoutInSeconds) const;
     };
 }

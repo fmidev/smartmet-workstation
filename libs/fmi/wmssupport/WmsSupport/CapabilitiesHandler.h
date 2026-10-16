@@ -45,6 +45,9 @@ namespace Wms
         std::function<bool(long, const std::string&)> cacheHitCallback_;
         static std::function<void()> parameterSelectionUpdateCallback_;
         std::shared_ptr<cppback::BackgroundManager> bManager_;
+        std::mutex workerMutex_;
+        std::future<void> workerFuture_;
+        static std::mutex callbackMutex_;
 
         std::unordered_map<int, Wms::DynamicServerSetup> servers_;
         std::string proxyUrl_;

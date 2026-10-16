@@ -85,6 +85,7 @@ namespace Wms
     } // unnamed namespace ends
 
     std::function<void()> CapabilitiesHandler::parameterSelectionUpdateCallback_ = nullptr;
+    std::mutex CapabilitiesHandler::callbackMutex_;
 
     CapabilitiesHandler::CapabilitiesHandler(
         std::unique_ptr<Web::Client> client,
@@ -109,6 +110,7 @@ namespace Wms
 
     void CapabilitiesHandler::setParameterSelectionUpdateCallback(std::function<void()>& parameterSelectionUpdateCallback)
     {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
         parameterSelectionUpdateCallback_ = parameterSelectionUpdateCallback;
     }
 
@@ -159,101 +161,142 @@ namespace Wms
 
     void CapabilitiesHandler::startFetchingCapabilitiesInBackground()
     {
-        bManager_->addTask([this]()
+        std::lock_guard<std::mutex> lock(workerMutex_);
+        if(bManager_->isKillSignalSet())
+            return;
+        if(workerFuture_.valid())
+        {
+            if(workerFuture_.wait_for(std::chrono::seconds(0)) != std::future_status::ready)
+                return;
+            try { workerFuture_.get(); }
+            catch(const std::exception& e)
+            {
+                CatLog::logMessage(std::string("GetCapabilities worker stopped: ") + e.what(), CatLog::Severity::Error, CatLog::Category::NetRequest, true);
+            }
+            catch(...)
+            {
+                CatLog::logMessage("GetCapabilities worker stopped with an unknown exception", CatLog::Severity::Error, CatLog::Category::NetRequest, true);
+            }
+        }
+        workerFuture_ = bManager_->addTask([this]()
             {
                 std::string workingThreadName = "GetCapabilityTree";
                 // Owned only by this worker; published trees are independent copies.
                 std::map<int, std::unique_ptr<CapabilityTree>> lastGoodTrees;
+                auto workingHashesPtr = std::make_shared<CapabilitiesHandlerHashes>(*getHashes());
                 while(!bManager_->isKillSignalSet())
                 {
-                    auto children = std::vector<std::unique_ptr<CapabilityTree>>{};
-                    bool foundAnyWmsServerData = false;
-                    // Tehdään kopio hashes tietorakenteesta, jotta sitä voidaan päivityksen aikan rauhassa päivitellä
-                    // Wms servereiden muuttuneilla sisällöillä.
-                    auto workingHashesPtr = std::make_shared<CapabilitiesHandlerHashes>(*getHashes());
+                    try
+                    {
+                        auto children = std::vector<std::unique_ptr<CapabilityTree>>{};
+                        bool foundAnyWmsServerData = false;
 
-                    for(auto& serverKV : servers_)
+                        for(auto& serverKV : servers_)
+                        {
+                            if(bManager_->isKillSignalSet())
+                                return;
+                            const auto& server = serverKV.second;
+                            try
+                            {
+                                NFmiLedLightStatusBlockReporter blockReporter(NFmiLedChannel::WmsData, workingThreadName, MakeLedChannelGetCapabilityTreeReport(server.generic.host));
+                                auto query = QueryBuilder{}.setScheme(server.generic.scheme)
+                                    .setHost(server.generic.host)
+                                    .setPath(server.generic.path)
+                                    .setService("WMS")
+                                    .setVersion(server.version)
+                                    .setRequest("GetCapabilities")
+                                    .setToken(server.generic.token)
+                                    .build();
+                                auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_, server.acceptTimeDimensionalLayersOnly };
+                                auto xml = fetchCapabilitiesXml(*client_, query, server.logFetchCapabilitiesRequest, server.doVerboseLogging, getCapabilitiesTimeoutInSeconds_);
+                                // Parsing must not modify published hashes or change-detection history.
+                                std::map<long, std::map<long, LayerInfo>> serverHashes;
+                                auto candidateChanges = changedLayers_;
+                                candidateChanges.changedLayers.clear();
+                                auto candidateTree = capabilityTreeParser.parseXmlGeneral(xml, serverHashes, candidateChanges);
+                                if(!candidateChanges.changedLayers.empty())
+                                    cacheDirtyCallback_(server.producer.GetIdent(), candidateChanges.changedLayers);
+
+                                // Replace this producer only after the entire refresh has succeeded.
+                                workingHashesPtr->getHashes()[server.producer.GetIdent()].swap(serverHashes[server.producer.GetIdent()]);
+                                lastGoodTrees[serverKV.first] = std::move(candidateTree);
+                                changedLayers_ = std::move(candidateChanges);
+                                foundAnyWmsServerData = true;
+                            }
+                            catch(const std::exception& e)
+                            {
+                                if(bManager_->isKillSignalSet())
+                                    return;
+                                std::string errorMessage = "Error with dynamic Wms server '";
+                                errorMessage += server.generic.host;
+                                errorMessage += "', while fetching or parsing getCapabilities response: ";
+                                errorMessage += e.what();
+                                errorMessage += lastGoodTrees.count(serverKV.first)
+                                    ? "; retaining last successful capabilities."
+                                    : "; no previous successful capabilities available.";
+                                CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
+                            }
+                            catch(...)
+                            {
+                                if(bManager_->isKillSignalSet())
+                                    return;
+                                CatLog::logMessage("Unknown GetCapabilities failure for " + server.generic.host + "; keeping previous capabilities if available.", CatLog::Severity::Error, CatLog::Category::NetRequest, true);
+                            }
+                        }
+                        if(bManager_->isKillSignalSet())
+                            return;
+                        for(const auto& serverKV : servers_)
+                        {
+                            auto previous = lastGoodTrees.find(serverKV.first);
+                            if(previous != lastGoodTrees.end())
+                                children.push_back(cloneCapabilityTree(*previous->second));
+                        }
+                        auto newTree = std::make_shared<CapabilityNode>(rootValue_, std::move(children));
+                        auto publishedHashes = std::make_shared<CapabilitiesHandlerHashes>(*workingHashesPtr);
+                        {
+                            std::scoped_lock lock(hashesMutex_, capabilityTreeMutex_);
+                            hashesPtr_ = std::move(publishedHashes);
+                            capabilityTree_ = std::move(newTree);
+                        }
+                        getCapabilitiesHaveBeenRetrieved_ = true;
+                        if(foundAnyWmsServerData)
+                        {
+                            try
+                            {
+                                getCapabilitiesUpdateCallbackWrapper();
+                            }
+                            catch(const std::exception& e)
+                            {
+                                CatLog::logMessage(std::string("GetCapabilities update callback failed: ") + e.what(), CatLog::Severity::Error, CatLog::Category::NetRequest, true);
+                            }
+                            catch(...)
+                            {
+                                CatLog::logMessage("GetCapabilities update callback failed with an unknown exception", CatLog::Severity::Error, CatLog::Category::NetRequest, true);
+                            }
+                        }
+
+                    }
+                    catch(const std::exception& e)
                     {
                         if(bManager_->isKillSignalSet())
                             return;
-                        const auto& server = serverKV.second;
-                        NFmiLedLightStatusBlockReporter blockReporter(NFmiLedChannel::WmsData, workingThreadName, MakeLedChannelGetCapabilityTreeReport(server.generic.host));
-                        auto query = QueryBuilder{}.setScheme(server.generic.scheme)
-                            .setHost(server.generic.host)
-                            .setPath(server.generic.path)
-                            .setService("WMS")
-                            .setVersion(server.version)
-                            .setRequest("GetCapabilities")
-                            .setToken(server.generic.token)
-                            .build();
-
-                        try
-                        {
-                            auto capabilityTreeParser = CapabilityTreeParser{ server.producer, server.delimiter, cacheHitCallback_, server.acceptTimeDimensionalLayersOnly };
-                            auto xml = fetchCapabilitiesXml(*client_, query, server.logFetchCapabilitiesRequest, server.doVerboseLogging, getCapabilitiesTimeoutInSeconds_);
-                            // Parsing must not modify published hashes or change-detection history.
-                            std::map<long, std::map<long, LayerInfo>> serverHashes;
-                            auto candidateChanges = changedLayers_;
-                            candidateChanges.changedLayers.clear();
-                            auto candidateTree = capabilityTreeParser.parseXmlGeneral(xml, serverHashes, candidateChanges);
-                            if(!candidateChanges.changedLayers.empty())
-                                cacheDirtyCallback_(server.producer.GetIdent(), candidateChanges.changedLayers);
-
-                            // Replace this producer only after the entire refresh has succeeded.
-                            workingHashesPtr->getHashes()[server.producer.GetIdent()].swap(serverHashes[server.producer.GetIdent()]);
-                            lastGoodTrees[serverKV.first] = std::move(candidateTree);
-                            changedLayers_ = std::move(candidateChanges);
-                            foundAnyWmsServerData = true;
-                        }
-                        catch(std::exception& e)
-                        {
-                            std::string errorMessage = "Error with dynamic Wms server '";
-                            errorMessage += server.generic.host;
-                            errorMessage += "', while fetching or parsing getCapabilities response: ";
-                            errorMessage += e.what();
-                            errorMessage += lastGoodTrees.count(serverKV.first)
-                                ? "; retaining last successful capabilities."
-                                : "; no previous successful capabilities available.";
-                            CatLog::logMessage(errorMessage, CatLog::Severity::Error, CatLog::Category::NetRequest, true);
-                        }
-                        catch(...)
-                        {
-                            // Mahdollinen ongelma on jo lokitettu, tällä pyritään estämään että poikkeus jonkun serverin käsittelyssä ei estä muiden toimintaa
-                        }
+                        CatLog::logMessage(std::string("GetCapabilities refresh cycle failed; retrying after polling interval: ") + e.what(), CatLog::Severity::Error, CatLog::Category::NetRequest, true);
                     }
-                    if(bManager_->isKillSignalSet())
-                        return;
-                    for(const auto& serverKV : servers_)
+                    catch(...)
                     {
-                        auto previous = lastGoodTrees.find(serverKV.first);
-                        if(previous != lastGoodTrees.end())
-                            children.push_back(cloneCapabilityTree(*previous->second));
+                        if(bManager_->isKillSignalSet())
+                            return;
+                        CatLog::logMessage("GetCapabilities refresh cycle failed with an unknown exception; retrying after polling interval", CatLog::Severity::Error, CatLog::Category::NetRequest, true);
                     }
-                    auto newTree = std::make_shared<CapabilityNode>(rootValue_, std::move(children));
-                    {
-                        std::scoped_lock lock(hashesMutex_, capabilityTreeMutex_);
-                        hashesPtr_ = std::move(workingHashesPtr);
-                        capabilityTree_ = std::move(newTree);
-                    }
-                    getCapabilitiesHaveBeenRetrieved_ = true;
-                    if(foundAnyWmsServerData)
-                    {
-                        try
-                        {
-                            getCapabilitiesUpdateCallbackWrapper();
-                        }
-                        catch(const std::exception& e)
-                        {
-                            CatLog::logMessage(std::string("GetCapabilities update callback failed: ") + e.what(), CatLog::Severity::Error, CatLog::Category::NetRequest, true);
-                        }
-                        catch(...)
-                        {
-                            CatLog::logMessage("GetCapabilities update callback failed with an unknown exception", CatLog::Severity::Error, CatLog::Category::NetRequest, true);
-                        }
-                    }
-
                     using namespace std::literals;
-                    bManager_->sleepInIntervals(intervalToPollGetCapabilities_, 500ms, "CapabilitiesHandler::BackgroundFetching");
+                    try
+                    {
+                        bManager_->sleepInIntervals(intervalToPollGetCapabilities_, 500ms, "CapabilitiesHandler::BackgroundFetching");
+                    }
+                    catch(const cppback::TaskStoppedByKillSignal&)
+                    {
+                        return;
+                    }
                 }
             }
         );
@@ -261,10 +304,15 @@ namespace Wms
 
     void CapabilitiesHandler::getCapabilitiesUpdateCallbackWrapper()
     {
-        if(parameterSelectionUpdateCallback_)
+        std::function<void()> callback;
+        {
+            std::lock_guard<std::mutex> lock(callbackMutex_);
+            callback = parameterSelectionUpdateCallback_;
+        }
+        if(callback)
         {
             // Aina kun on haettu uudet GetCapabilities haut, kutsutaan tätä
-            parameterSelectionUpdateCallback_();
+            callback();
         }
     }
 

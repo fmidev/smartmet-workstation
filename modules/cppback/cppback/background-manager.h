@@ -5,6 +5,9 @@
 #include "catlog/catlog.h"
 
 #include <future>
+#include <atomic>
+#include <thread>
+#include <mutex>
 #include <type_traits>
 
 namespace cppback
@@ -45,26 +48,40 @@ namespace cppback
     class BackgroundManager
     {
         std::atomic_uint running_ = 0;
-        std::future<void> shouldDie_;
+        std::shared_future<void> shouldDie_;
+        std::once_flag killOnce_;
         std::promise<void> killBackgroundTasks_;
         mutable std::atomic_bool forcedWakeUp_ = false;
     public:
         BackgroundManager()
         {
-            shouldDie_ = killBackgroundTasks_.get_future();
+            shouldDie_ = killBackgroundTasks_.get_future().share();
         }
 
         template<typename LambdaWithNoArgs>
         decltype(auto) addTask(LambdaWithNoArgs&& func)
         {
-            return spin([&, func = std::move(func)]() mutable
+            // Count the task before launching: isDead() must include pending starts.
+            ++running_;
+            try
             {
-                if(isKillSignalSet())
+                return spin([this, func = std::move(func)]() mutable
                 {
-                    throw AlreadyKilled("Can't add task after kill signal is already set.");
-                }
-                return addTaskImpl(std::move(func));
-            });
+                    struct Completion
+                    {
+                        std::atomic_uint& count;
+                        ~Completion() { --count; }
+                    } completion{running_};
+                    if(isKillSignalSet())
+                        throw AlreadyKilled("Can't add task after kill signal is already set.");
+                    return addTaskImpl(std::move(func));
+                });
+            }
+            catch(...)
+            {
+                --running_;
+                throw;
+            }
         }
 
         template<typename LambdaWithNoArgs>
@@ -76,7 +93,6 @@ namespace cppback
             >
         {
             std::result_of_t<LambdaWithNoArgs()> result;
-            ++running_;
             try
             {
                 result = func();
@@ -84,10 +100,8 @@ namespace cppback
             catch(const std::exception& e)
             {
                 logException(e, "BackgroundManager::addTaskImpl->result");
-                --running_;
-                throw e;
+                throw;
             }
-            --running_;
             return result;
         }
 
@@ -99,7 +113,6 @@ namespace cppback
             void
             >
         {
-            ++running_;
             try
             {
                 func();
@@ -107,19 +120,13 @@ namespace cppback
             catch(const std::exception& e)
             {
                 logException(e, "BackgroundManager::addTaskImpl->void");
-                --running_;
-                throw e;
+                throw;
             }
-            --running_;
         }
 
         void kill()
         {
-            if(isKillSignalSet())
-            {
-                return;
-            }
-            killBackgroundTasks_.set_value();
+            std::call_once(killOnce_, [this]() { killBackgroundTasks_.set_value(); });
         }
 
         bool isKillSignalSet() const

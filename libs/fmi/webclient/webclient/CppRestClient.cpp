@@ -46,40 +46,80 @@ namespace Web
 
     std::future<std::string> CppRestClient::queryFor(const std::string& domain, const std::string& request, int timeoutInSeconds) const
     {
+        if(timeoutInSeconds <= 0)
+            throw std::invalid_argument("HTTP request timeout must be positive");
         ::makeTraceLevelRequestLogging(domain, request);
-            return bManager_->addTask(
-                [this, domain, request, timeoutInSeconds]
-                    {
-                            auto response = tmp(domain, request, timeoutInSeconds);
-                            if(response.status_code() < 200 || response.status_code() >= 300)
-                            {
-                                throw std::runtime_error("HTTP " + std::to_string(response.status_code()) + " from " + domain);
-                            }
-                            auto bodyStream = response.body();
-                            Concurrency::streams::container_buffer<std::string> inStringBuffer;
-                            bodyStream.read_to_end(inStringBuffer).wait();
-                            return inStringBuffer.collection();
-                    });
+        return bManager_->addTask([this, domain, request, timeoutInSeconds]()
+        {
+            return tmp(domain, request, timeoutInSeconds);
+        });
     }
 
-    web::http::http_response CppRestClient::tmp(const std::string& domain, const std::string& request, int timeoutInSeconds) const
+    std::string CppRestClient::tmp(const std::string& domain, const std::string& request, int timeoutInSeconds) const
     {
+        auto attempt = [&](bool useProxy)
+        {
+            // Each attempt has its own cancellation source; timing out must not
+            // permanently cancel this client or any concurrent image requests.
+            Concurrency::cancellation_token_source requestCancellation;
+            const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(timeoutInSeconds);
+            auto waitFor = [&](auto task)
+            {
+                while(!task.is_done())
+                {
+                    const bool stopping = tokenSource_.get_token().is_canceled() || bManager_->isKillSignalSet();
+                    if(stopping || std::chrono::steady_clock::now() >= deadline)
+                    {
+                        requestCancellation.cancel();
+                        // Observe eventual completion without holding the caller hostage
+                        // if the transport takes longer to finish cancellation.
+                        task.then([](decltype(task) completed)
+                        {
+                            try { completed.get(); }
+                            catch(...) {}
+                        });
+                        if(stopping)
+                            throw pplx::task_canceled();
+                        throw web::http::http_exception("HTTP request deadline exceeded for " + domain);
+                    }
+                    bManager_->isKillSignalSet(std::chrono::milliseconds(50));
+                }
+                return task.get();
+            };
+
+            if(tokenSource_.get_token().is_canceled() || bManager_->isKillSignalSet())
+                throw pplx::task_canceled();
+            auto client = web::http::client::http_client(to_string_t(domain), createConfig(useProxy, timeoutInSeconds));
+            auto response = waitFor(client.request(web::http::methods::GET, to_string_t(request), requestCancellation.get_token()));
+            if(response.status_code() < 200 || response.status_code() >= 300)
+            {
+                requestCancellation.cancel();
+                throw std::runtime_error("HTTP " + std::to_string(response.status_code()) + " from " + domain);
+            }
+
+            // Keep the destination alive until the body task finishes, including
+            // when waitFor exits early after cancellation or its deadline.
+            auto buffer = std::make_shared<Concurrency::streams::container_buffer<std::string>>();
+            auto bodyTask = response.body().read_to_end(*buffer).then([buffer](pplx::task<size_t> completed)
+            {
+                completed.get();
+                return buffer->collection();
+            });
+            return waitFor(bodyTask);
+        };
+
         try
         {
-            auto client = web::http::client::http_client(to_string_t(domain), createConfig(false, timeoutInSeconds));
-            return client.request(web::http::methods::GET, to_string_t(request), tokenSource_.get_token()).get();
+            return attempt(false);
         }
         catch(const web::http::http_exception& e)
         {
-            // A transient failure must not change routing for subsequent requests.
             if(proxyUrl_.empty() || tokenSource_.get_token().is_canceled() || bManager_->isKillSignalSet())
                 throw;
-
             CatLog::logMessage("Request to " + domain + " failed on the default route: " + e.what()
                 + "; retrying once with the configured proxy (timeout " + std::to_string(timeoutInSeconds) + "s)",
                 CatLog::Severity::Warning, CatLog::Category::NetRequest);
-            auto client = web::http::client::http_client(to_string_t(domain), createConfig(true, timeoutInSeconds));
-            return client.request(web::http::methods::GET, to_string_t(request), tokenSource_.get_token()).get();
+            return attempt(true);
         }
     }
 
