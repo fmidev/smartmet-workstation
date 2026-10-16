@@ -140,6 +140,7 @@ protected:
 #ifndef DISABLE_EXTREME_TOOLKITPRO
     std::unique_ptr<CXTPSyntaxEditCtrl>	itsSyntaxEditControl;
     HACCEL itsSyntaxEditControlAcceleratorTable;
+    bool itsSyntaxEditRefreshPending;
 #endif // DISABLE_EXTREME_TOOLKITPRO
 
 public:
