@@ -401,22 +401,33 @@ namespace Wms
 
 	DimensionTimeData CapabilityTreeParser::getDimensionTimeData(LPXNode layerNode)
 	{
-		DimensionTimeData dimensionTimeData;
-		auto dimensionNode = layerNode->GetChilds(_TEXT("Dimension"));
-		if(!dimensionNode.empty())
+		// A child's own time dimension overrides its ancestors. Otherwise use
+		// the nearest enclosing Layer that defines time, regardless of queryable.
+		for(auto currentLayer = layerNode;
+			currentLayer && currentLayer->name == _TEXT("Layer");
+			currentLayer = currentLayer->parent)
 		{
-			auto dNode = dimensionNode.at(0);
-			dimensionTimeData.nodeName_ = XmlHelper::AttributeValue(dNode, "name");
-			if(dimensionTimeData.nodeName_ == "time")
+			for(const auto& dimensionNode : currentLayer->GetChilds(_TEXT("Dimension")))
 			{
-				dimensionTimeData.timeWindow_ = XmlHelper::ChildNodeValue(layerNode, "Dimension");
-				auto startEnd = parseStartAndEndFromTimeDimension(dimensionTimeData.timeWindow_);
-				dimensionTimeData.startTime_ = startEnd.first;
-				dimensionTimeData.endTime_ = startEnd.second;
-				dimensionTimeData.timeResolution_ = getPossibleResolutionTimeDimension(dimensionTimeData.timeWindow_);
+				if(XmlHelper::AttributeValue(dimensionNode, "name") != "time")
+					continue;
+
+				DimensionTimeData dimensionTimeData;
+				dimensionTimeData.nodeName_ = "time";
+				// Read the matching Dimension, not simply the first one.
+				dimensionTimeData.timeWindow_ = std::string(CT2A(dimensionNode->GetText()));
+				if(!dimensionTimeData.timeWindow_.empty())
+				{
+					auto startEnd = parseStartAndEndFromTimeDimension(dimensionTimeData.timeWindow_);
+					dimensionTimeData.startTime_ = startEnd.first;
+					dimensionTimeData.endTime_ = startEnd.second;
+					dimensionTimeData.timeResolution_ = getPossibleResolutionTimeDimension(dimensionTimeData.timeWindow_);
+				}
+				return dimensionTimeData;
 			}
 		}
-		return dimensionTimeData;
+		// No time dimension on this layer or any ancestor: static layer.
+		return DimensionTimeData{};
 	}
 
 	void CapabilityTreeParser::ParseLeafLayer(std::unique_ptr<CapabilityNode>& subTree, LPXNode layerNode, std::list<std::string>& path,
