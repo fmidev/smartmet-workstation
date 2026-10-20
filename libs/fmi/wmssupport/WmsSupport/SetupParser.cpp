@@ -158,7 +158,9 @@ namespace Wms
         settings.getCapabilitiesTimeoutInSeconds = NFmiSettings::Optional("SmartMet::Wms2::BackgroundFetches::GetCapabilitiesTimeoutInSeconds", 30);
         settings.numberOfCaches = NFmiSettings::Optional("SmartMet::Wms2::Cache::NumberOfCaches", 0);
         settings.numberOfLayersPerCache = NFmiSettings::Optional("SmartMet::Wms2::Cache::NumberOfLayersPerCache", 0);
-        settings.proxyUrl = "http://" + NFmiSettings::Optional("SmartMet::Wms2::ProxyUrl", std::string(""));
+        settings.proxyUrl = NFmiSettings::Optional("SmartMet::Wms2::ProxyUrl", std::string(""));
+        if(!settings.proxyUrl.empty() && settings.proxyUrl.find("://") == std::string::npos)
+            settings.proxyUrl = "http://" + settings.proxyUrl;
         settings.intervalToPollGetCapabilities = std::chrono::seconds{ NFmiSettings::Optional("SmartMet::Wms2::GetCapabilities::PollInterval", 5 * 60) };
         settings.renewWmsSystemIntervalInHours = NFmiSettings::Optional<float>("SmartMet::Wms2::GetCapabilities::RenewWmsSystemIntervalInHours", 6.f);
         parseDynamics("SmartMet::Wms2::DynamicDatas", settings.dynamics, doVerboseLogging);

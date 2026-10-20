@@ -1930,8 +1930,8 @@ void NFmiTimeSerialView::DrawSelectedStationDataForNonEditedData(void)
     if(itsInfo)
         DrawSelectedStationData(itsInfo, primaryLatlon, counter);
 
-    // Draw possible additional dispaying selected points
-    if(!itsCtrlViewDocumentInterface->IsPreciseTimeSerialLatlonPointUsed())
+    // Additional map-selected points are only used outside control-point drawing.
+    if(!DoControlPointModeDrawing() && !itsCtrlViewDocumentInterface->IsPreciseTimeSerialLatlonPointUsed())
     {
         if(editedInfo->MaskType() == NFmiMetEditorTypes::kFmiDisplayedMask && itsCtrlViewDocumentInterface->AllowRightClickDisplaySelection())
         {
@@ -4838,14 +4838,14 @@ std::string NFmiTimeSerialView::GetEditingRelatedDataToolTipText(const NFmiPoint
 
 NFmiPoint NFmiTimeSerialView::GetTooltipLatlon() const
 {
-    // 1. In control-point mode the active CP is the reference point, but only for the edited data
-    //    itself (that is what control points modify). For non-edited reference rows (model /
-    //    observation data) we keep using the normal pointed / selected map location, the same way
-    //    as outside CP mode, so their curve and the observation/model legends are always drawn and
-    //    describe the pointed location - instead of following the active CP, which is often not set
-    //    (ActiveCPLatLon() then returns a missing latlon and neither legend gets drawn at all).
-    if(DoControlPointModeDrawing() && itsDrawParam->DataType() == NFmiInfoData::kEditable)
-        return itsCtrlViewDocumentInterface->CPManager()->ActiveCPLatLon();
+    // 1. All rows follow the active control point, including model and observation rows.
+    //    Non-edited rows retain their normal location when no control point is active.
+    if(DoControlPointModeDrawing())
+    {
+        const auto &activeCpLatlon = itsCtrlViewDocumentInterface->CPManager()->ActiveCPLatLon();
+        if(activeCpLatlon != NFmiPoint::gMissingLatlon || itsDrawParam->DataType() == NFmiInfoData::kEditable)
+            return activeCpLatlon;
+    }
 
     // 2. If non-edited data selected
     if(itsDrawParam->DataType() != NFmiInfoData::kEditable)

@@ -38,6 +38,8 @@ public:
     static CSmartMetView* GetSmartMetView();
     static CView* GetSmartMetViewAsCView();
 
+    // May be called from a worker before the main window exists.
+    virtual void PostWmsCapabilitiesUpdated() = 0;
     virtual void ParameterSelectionSystemUpdateTimerStart(int waitTimeInSeconds) = 0;
     virtual void SetNotificationMessage(const std::string &theNotificationMsgStr, const std::string &theNotificationTitle, int theStyle, int theTimeout, bool fNoSound) = 0;
     virtual CSmartMetDoc* GetDocument() = 0; // returns CSmartMetDoc

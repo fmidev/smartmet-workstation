@@ -118,6 +118,7 @@ private:
 	void DrawSingleTrajector(const NFmiSingleTrajector &theSingleTrajector, NFmiDrawingEnvironment &theEnvi, int theTimeStepInMinutes, int theTimeMarkerPixelSize, int theTimeMarkerPixelPenSize, FmiDirection theDirection);
 	const std::vector<NFmiPoint>& GetMinorPoints(void);
 	NFmiMetTime GetCrossSectionTime(const NFmiPoint &theRelativePlace);
+    double GetCrossSectionHorizontalFraction(const NFmiPoint& point);
 	void FillMainPointXYInfo(NFmiDataMatrix<NFmiPoint> &theCoordinates);
 	NFmiPoint GetCrossSectionLatlonPoint(const NFmiPoint &theRelativePlace);
 	std::string GetSelectedParamInfoString(NFmiFastQueryInfo *theInfo);

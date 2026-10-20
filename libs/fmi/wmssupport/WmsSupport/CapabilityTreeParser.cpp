@@ -6,6 +6,8 @@
 
 #include <regex>
 #include <algorithm>
+#include <boost/property_tree/xml_parser.hpp>
+#include <sstream>
 #include <codecvt>
 #include <regex>
 
@@ -33,6 +35,8 @@ namespace Wms
 
 		std::string popLastElementFrom(std::list<std::string>& path)
 		{
+			if(path.empty())
+				throw std::runtime_error("WMS layer has an empty path");
 			auto valueName = path.back();
 			path.pop_back();
 			return valueName;
@@ -43,7 +47,8 @@ namespace Wms
 		std::string parseDomain(std::string& legendUrl)
 		{
 			auto result = std::smatch{};
-			std::regex_search(legendUrl, result, domainRegex);
+			if(!std::regex_search(legendUrl, result, domainRegex))
+				throw std::runtime_error("Invalid WMS legend URL");
 			return *result.begin();
 		}
 
@@ -104,18 +109,9 @@ namespace Wms
 
 			for(size_t i = 0; i < layerNode->GetChilds().size(); i++)
 			{
-				try
-				{
-					auto childNode = layerNode->GetChild(static_cast<int>(i));
-					if(childNode && childNode->name == "Style")
-					{
-						styles.insert(parseStyle(childNode));
-					}
-				}
-				catch(...)
-				{
-					continue;
-				}
+				auto childNode = layerNode->GetChild(static_cast<int>(i));
+				if(childNode && childNode->name == "Style")
+					styles.insert(parseStyle(childNode));
 
 			}
 			if(styles.size() == 1 && (styles.begin()->name == "Default" || styles.begin()->name == "default"))
@@ -331,25 +327,30 @@ namespace Wms
 		changedLayers.setProducerId(producer_.GetIdent());
 		auto path = std::list<std::string>{};
 
+		// Validate the complete document before the legacy parser can accept a partial tree.
+		boost::property_tree::ptree document;
+		std::istringstream input(xml);
+		boost::property_tree::read_xml(input, document, boost::property_tree::xml_parser::no_comments);
+		if(document.size() != 1 ||
+			(document.begin()->first != "WMS_Capabilities" && document.begin()->first != "WMT_MS_Capabilities"))
+			throw std::runtime_error("Expected a WMS capabilities document (received an error or unexpected XML root)");
+		const auto& root = document.begin()->second;
+		if(root.count("Capability") != 1 || !root.get_child("Capability").get_child_optional("Layer"))
+			throw std::runtime_error("WMS capabilities document is missing its Capability/Layer structure");
+
 		XNode xmlRoot;
+		PARSEINFO parseInfo;
 		CString sxmlU_(CA2T(xml.c_str()));
-		if(xmlRoot.Load(sxmlU_) == false)
+		if(xmlRoot.Load(sxmlU_, &parseInfo) == nullptr || parseInfo.erorr_occur)
 		{
-			throw std::runtime_error(std::string("CapabilityTreeParser::parseXml - xmlRoot.Load(sxmlU_) failed for string: \n") + xml);
+			throw std::runtime_error("WMS capabilities XML could not be parsed");
 		}
 
-		try
-		{
-
-			auto capabilityNodes = xmlRoot.GetChilds(_TEXT("Capability"));
-			for(const auto& capabilityNode : capabilityNodes)
-			{
-				ParseCapability(subTree, capabilityNode, path, hashes, changedLayers);
-			}
-		}
-		catch(...)
-		{
-		}
+        auto capabilityNodes = xmlRoot.GetChilds(_TEXT("Capability"));
+        if(capabilityNodes.size() != 1 || capabilityNodes.front()->GetChilds(_TEXT("Layer")).empty())
+            throw std::runtime_error("WMS capabilities structure could not be parsed");
+        for(const auto& capabilityNode : capabilityNodes)
+            ParseCapability(subTree, capabilityNode, path, hashes, changedLayers);
 
 		return std::move(subTree);
 	}
@@ -400,22 +401,33 @@ namespace Wms
 
 	DimensionTimeData CapabilityTreeParser::getDimensionTimeData(LPXNode layerNode)
 	{
-		DimensionTimeData dimensionTimeData;
-		auto dimensionNode = layerNode->GetChilds(_TEXT("Dimension"));
-		if(!dimensionNode.empty())
+		// A child's own time dimension overrides its ancestors. Otherwise use
+		// the nearest enclosing Layer that defines time, regardless of queryable.
+		for(auto currentLayer = layerNode;
+			currentLayer && currentLayer->name == _TEXT("Layer");
+			currentLayer = currentLayer->parent)
 		{
-			auto dNode = dimensionNode.at(0);
-			dimensionTimeData.nodeName_ = XmlHelper::AttributeValue(dNode, "name");
-			if(dimensionTimeData.nodeName_ == "time")
+			for(const auto& dimensionNode : currentLayer->GetChilds(_TEXT("Dimension")))
 			{
-				dimensionTimeData.timeWindow_ = XmlHelper::ChildNodeValue(layerNode, "Dimension");
-				auto startEnd = parseStartAndEndFromTimeDimension(dimensionTimeData.timeWindow_);
-				dimensionTimeData.startTime_ = startEnd.first;
-				dimensionTimeData.endTime_ = startEnd.second;
-				dimensionTimeData.timeResolution_ = getPossibleResolutionTimeDimension(dimensionTimeData.timeWindow_);
+				if(XmlHelper::AttributeValue(dimensionNode, "name") != "time")
+					continue;
+
+				DimensionTimeData dimensionTimeData;
+				dimensionTimeData.nodeName_ = "time";
+				// Read the matching Dimension, not simply the first one.
+				dimensionTimeData.timeWindow_ = std::string(CT2A(dimensionNode->GetText()));
+				if(!dimensionTimeData.timeWindow_.empty())
+				{
+					auto startEnd = parseStartAndEndFromTimeDimension(dimensionTimeData.timeWindow_);
+					dimensionTimeData.startTime_ = startEnd.first;
+					dimensionTimeData.endTime_ = startEnd.second;
+					dimensionTimeData.timeResolution_ = getPossibleResolutionTimeDimension(dimensionTimeData.timeWindow_);
+				}
+				return dimensionTimeData;
 			}
 		}
-		return dimensionTimeData;
+		// No time dimension on this layer or any ancestor: static layer.
+		return DimensionTimeData{};
 	}
 
 	void CapabilityTreeParser::ParseLeafLayer(std::unique_ptr<CapabilityNode>& subTree, LPXNode layerNode, std::list<std::string>& path,

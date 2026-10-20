@@ -12,6 +12,7 @@
 #include <cppext/split.h>
 #include <cppback/background-manager.h>
 
+#include <atomic>
 #include <chrono>
 #include <map>
 #include <string>
@@ -44,6 +45,9 @@ namespace Wms
         std::function<bool(long, const std::string&)> cacheHitCallback_;
         static std::function<void()> parameterSelectionUpdateCallback_;
         std::shared_ptr<cppback::BackgroundManager> bManager_;
+        std::mutex workerMutex_;
+        std::future<void> workerFuture_;
+        static std::mutex callbackMutex_;
 
         std::unordered_map<int, Wms::DynamicServerSetup> servers_;
         std::string proxyUrl_;
@@ -51,7 +55,7 @@ namespace Wms
         int getCapabilitiesTimeoutInSeconds_;
         // Jos tämä muuttuu true:ksi, se tarkoittaa että startFetchingCapabilitiesInBackground
         // metodi on mennyt kerran läpi, löytyi servereiltä mitään järkevää tai ei.
-        bool getCapabilitiesHaveBeenRetrieved_ = false;
+        std::atomic_bool getCapabilitiesHaveBeenRetrieved_{false};
     public:
         CapabilitiesHandler(
             std::unique_ptr<Web::Client> client,
@@ -65,6 +69,7 @@ namespace Wms
             );
 
         void startFetchingCapabilitiesInBackground();
+        void cancel();
         std::shared_ptr<CapabilitiesHandlerHashes> getHashes() const;
         void setHashes(std::shared_ptr<CapabilitiesHandlerHashes> hashesPtr);
         std::shared_ptr<CapabilityTree> getCapabilityTree() const;

@@ -35,6 +35,13 @@
 
 #ifndef DISABLE_EXTREME_TOOLKITPRO
 #include <SyntaxEdit\XTPSyntaxEditBufferManager.h>
+#include <SyntaxEdit\XTPSyntaxEditDefines.h>
+
+namespace
+{
+const UINT s_SyntaxEditRefreshMessage =
+    ::RegisterWindowMessage(_T("SmartMet.CFmiSmartToolDlg.RefreshSyntaxEdit"));
+}
 #endif // DISABLE_EXTREME_TOOLKITPRO
 
 /*
@@ -69,6 +76,7 @@ CFmiSmartToolDlg::CFmiSmartToolDlg(SmartMetDocumentInterface *smartMetDocumentIn
 #ifndef DISABLE_EXTREME_TOOLKITPRO
 ,itsSyntaxEditControl()
 ,itsSyntaxEditControlAcceleratorTable(NULL)
+,itsSyntaxEditRefreshPending(false)
 ,fShowTooltipsOnSmarttoolDialog(FALSE)
 #endif // DISABLE_EXTREME_TOOLKITPRO
 {
@@ -365,7 +373,16 @@ bool CFmiSmartToolDlg::LoadSmarttoolToSyntaxEditControl(const std::string &theFi
 
 void CFmiSmartToolDlg::UpdateSyntaxEditControl()
 {
-    itsSyntaxEditControl->Invalidate(FALSE);
+    if(!itsSyntaxEditControl ||
+        !::IsWindow(itsSyntaxEditControl->GetSafeHwnd()))
+        return;
+
+    // Clear Toolkit Pro's cached display rows and screen schema.
+    itsSyntaxEditControl->InvalidateRows();
+
+    // Invalidate and paint now, without erasing the background.
+    itsSyntaxEditControl->RedrawWindow(
+        nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW);
 }
 
 bool CFmiSmartToolDlg::StoreSmarttoolFromSyntaxEditControl(const std::string &theFilePath)
@@ -422,7 +439,11 @@ void CFmiSmartToolDlg::InitializeSyntaxEditControl()
     if(autoCompleteWindow)
     {
         CString maxAutoCompliteText = _T("occurrence_betweeneq(par, radius_km, time_offset1, time_offset2, limit1, limit2)");
-        auto textSizeInPixels = autoCompleteWindow->GetDC()->GetTextExtent(maxAutoCompliteText);
+        CSize textSizeInPixels;
+        {
+            CClientDC dc(autoCompleteWindow);
+            textSizeInPixels = dc.GetTextExtent(maxAutoCompliteText);
+        }
         // Jostain syystä laskettu maksimi tekstin pituu on aivan liian pitkä, lyhennetään sitä hieman
         int usedWidthInPixels = boost::math::iround(textSizeInPixels.cx * 0.85);
         autoCompleteWindow->SetWndWidth(usedWidthInPixels);
@@ -1484,6 +1505,31 @@ void CFmiSmartToolDlg::OnBnClickedRadioViewmacroSelectedMap3()
 
 BOOL CFmiSmartToolDlg::OnWndMsg(UINT message, WPARAM wParam, LPARAM lParam, LRESULT* pResult)
 {
+#ifndef DISABLE_EXTREME_TOOLKITPRO
+    if(s_SyntaxEditRefreshMessage != 0 && message == s_SyntaxEditRefreshMessage)
+    {
+        itsSyntaxEditRefreshPending = false;
+        UpdateSyntaxEditControl();
+        if(pResult)
+            *pResult = 0;
+        return TRUE;
+    }
+
+    if(message == WM_NOTIFY && lParam && itsSyntaxEditControl)
+    {
+        const NMHDR* notification = reinterpret_cast<const NMHDR*>(lParam);
+        if(notification->hwndFrom == itsSyntaxEditControl->GetSafeHwnd() &&
+            notification->code == XTP_EDIT_NM_EDITCHANGED &&
+            !itsSyntaxEditRefreshPending && s_SyntaxEditRefreshMessage != 0)
+        {
+            // The notification is synchronous: let the editor finish the edit
+            // before painting. Coalesce changes until the posted refresh runs.
+            itsSyntaxEditRefreshPending =
+                PostMessage(s_SyntaxEditRefreshMessage, 0, 0) != FALSE;
+        }
+    }
+#endif // DISABLE_EXTREME_TOOLKITPRO
+
 	if(message == ID_MESSAGE_SMARTTOOL_MODIFICATION_ENDED)
 		EnableDlgItem(IDC_BUTTON_ACTION, true); // enabloidaan smarttool muokkausten jälkeen taas muokkaa-nappi
 

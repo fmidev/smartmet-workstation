@@ -39,6 +39,7 @@
 #include "NFmiFastInfoUtils.h"
 #include "EditedInfoMaskHandler.h"
 #include "ToolBoxStateRestorer.h"
+#include <boost/scope_exit.hpp>
 #include "CtrlViewColorContourLegendDrawingFunctions.h"
 #include "NFmiColorContourLegendSettings.h"
 #include "NFmiColorContourLegendValues.h"
@@ -583,35 +584,63 @@ void NFmiCrossSectionView::DrawSingleTrajector(const NFmiSingleTrajector &theSin
 	}
 }
 
+static NFmiMetTime InterpolateCrossSectionTime(const std::vector<NFmiMetTime>& times, double fraction)
+{
+    if(times.empty() || fraction < 0 || fraction > 1)
+        throw runtime_error("Cross-section time is outside the available data.");
+    if(times.size() == 1 || fraction == 1)
+        return times.back();
+    double position = fraction * (times.size() - 1);
+    size_t index = static_cast<size_t>(position);
+    NFmiMetTime time(times[index]);
+    time.SetTimeStep(1);
+    time.ChangeByMinutes(boost::math::iround((position - index) * times[index + 1].DifferenceInMinutes(times[index])));
+    return time;
+}
+
+// Match FillXYMatrix, including trajectories that occupy only part of the time axis.
+double NFmiCrossSectionView::GetCrossSectionHorizontalFraction(const NFmiPoint& point)
+{
+    if(!itsDataViewFrame.IsInside(point))
+        throw runtime_error("Cross-section point is outside the view.");
+    double left = itsDataViewFrame.Left();
+    double width = itsDataViewFrame.Width();
+    if(itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
+    {
+        const auto& times = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryTimes();
+        if(times.size() < 2)
+            throw runtime_error("Cross-section trajectory has too few samples.");
+        const auto totalTimes = GetUsedTimeBagForDataCalculations();
+        double duration = totalTimes.LastTime().DifferenceInMinutes(totalTimes.FirstTime());
+        if(duration == 0)
+            throw runtime_error("Cross-section time range is empty.");
+        left = ::Time2X(times.front(), totalTimes.FirstTime(), duration, itsDataViewFrame);
+        width = ::TimeStepWidth(duration, times[1].DifferenceInMinutes(times[0]), itsDataViewFrame) * (times.size() - 1);
+    }
+    if(width == 0)
+        throw runtime_error("Cross-section horizontal range is empty.");
+    double fraction = (point.X() - left) / width;
+    // Tolerate rounding at the endpoints without extrapolating into blank areas.
+    if(fraction < -1e-9 || fraction > 1 + 1e-9)
+        throw runtime_error("Cross-section point is outside the available data.");
+    return fraction < 0 ? 0 : (fraction > 1 ? 1 : fraction);
+}
+
 NFmiMetTime NFmiCrossSectionView::GetCrossSectionTime(const NFmiPoint &theRelativePlace)
 {
     auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
-	bool obsForMode = crossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kObsAndFor;
-	if(itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
-	{
-		const std::vector<NFmiMetTime> &times = itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryTimes();
-		int column = GetNearestCrossSectionColumn(theRelativePlace);
-		return times[column];
-	}
-	else if(crossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kTime || obsForMode)
-	{
-		const NFmiTimeBag usedtimeBag = GetUsedTimeBagForDataCalculations();
-		int timeCount = usedtimeBag.GetSize();
-		double pos = (theRelativePlace.X() - itsDataViewFrame.Left())/(itsDataViewFrame.Width()) * (timeCount - 1);
-		int timeIndex = boost::math::iround(pos); // haetaan l‰hin aika k‰ytetyst‰ timebagista
-		NFmiTimeBag times(usedtimeBag); // pit‰‰ tehd‰ kopio
-		if(times.SetTime(static_cast<unsigned long>(timeIndex)))
-			return times.CurrentTime();
-		else
-			return times.FirstTime(); // JOKIN MENI OIKEASTI PIELEEN; TƒMƒ ON HƒTƒ PASKA
-	}
-	else if(crossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kRoute)
-	{
-		int column = GetNearestCrossSectionColumn(theRelativePlace);
-		return crossSectionSystem->RouteTimes().operator [](column);
-	}
-	else
-		return CurrentTime();
+    double fraction = GetCrossSectionHorizontalFraction(theRelativePlace);
+    if(itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
+        return InterpolateCrossSectionTime(itsCtrlViewDocumentInterface->TrajectorySystem()->Trajectory(itsViewGridRowNumber - 1).CrossSectionTrajectoryTimes(), fraction);
+    else if(crossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kRoute)
+        return InterpolateCrossSectionTime(crossSectionSystem->RouteTimes(), fraction);
+    else if(crossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kTime ||
+            crossSectionSystem->GetCrossMode() == NFmiCrossSectionSystem::kObsAndFor)
+    {
+        const auto times = GetUsedTimeBagForDataCalculations();
+        return InterpolateCrossSectionTime({times.FirstTime(), times.LastTime()}, fraction);
+    }
+    return CurrentTime();
 }
 
 void NFmiCrossSectionView::DrawOverBitmapThings(NFmiToolBox * /* theGTB */ , const NFmiPoint & /* thePlace */ )
@@ -666,12 +695,12 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 					str += "\n";
 					str += "1. &lt;- "; // < -merkki pit‰‰ escapeta (&lt; :ll‰)
 					int column = GetNearestCrossSectionColumn(theRelativePoint);
-					if(itsRoutePointsDistToEndPoint[column] != kFloatMissing)
+					if(column >= 0 && static_cast<size_t>(column) < itsRoutePointsDistToEndPoint.size() && itsRoutePointsDistToEndPoint[column] != kFloatMissing)
 						str += NFmiValueString::GetStringWithMaxDecimalsSmartWay(itsRoutePointsDistToEndPoint[column]/1000., 0);
 					else
 						str += "??";
 					str += "km, ";
-					if(itsRoutePointsDistToEndPoint[itsRoutePointsDistToEndPoint.size()-1] != kFloatMissing)
+					if(column >= 0 && static_cast<size_t>(column) < itsRoutePointsDistToEndPoint.size() && itsRoutePointsDistToEndPoint.back() != kFloatMissing && itsRoutePointsDistToEndPoint[column] != kFloatMissing)
 						str += NFmiValueString::GetStringWithMaxDecimalsSmartWay((itsRoutePointsDistToEndPoint[itsRoutePointsDistToEndPoint.size()-1] - itsRoutePointsDistToEndPoint[column])/1000., 0);
 					else
 						str += "??";
@@ -702,12 +731,13 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 					float value = GetLevelValue(info, p, latlon, aTime); // tee log(p) interpoloinnit qinfoon ja k‰yt‰ t‰ss‰!!!!
 					NFmiExtraMacroParamData extraMacroParamData;
 
-                    if(info->DataType() == NFmiInfoData::kCrossSectionMacroParam)
+                    if(info->DataType() == NFmiInfoData::kCrossSectionMacroParam && crossMode != NFmiCrossSectionSystem::kObsAndFor)
                     {
                         NFmiIsoLineData isoLineData;
                         CrossSectionTooltipData tooltipData;
                         tooltipData.latlons[0] = latlon;
-                        tooltipData.times[0] = aTime;
+                        // Macro time grids can have a coarser range than the axis time bag.
+                        tooltipData.times[0] = InterpolateCrossSectionTime(MakeTimeVector(), GetCrossSectionHorizontalFraction(theRelativePoint));
                         tooltipData.pressures[0] = p;
                         FillCrossSectionMacroParamData(itsIsolineValues, isoLineData, itsPressures, itsDrawParam, &tooltipData, &extraMacroParamData);
 						if(!tooltipData.macroParamErrorMessage.empty())
@@ -721,13 +751,33 @@ std::string NFmiCrossSectionView::ComposeToolTipText(const NFmiPoint& theRelativ
 						else
 	                        value = tooltipData.values[0][0];
                     }
-					else if(crossMode == NFmiCrossSectionSystem::kObsAndFor)
+					else if(crossMode == NFmiCrossSectionSystem::kObsAndFor && !itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView())
 					{
-                        // HUOM! t‰m‰ ei toimi, jos 
-                        // 1. On useita parametreja k‰ytˆss‰ (koska vain viimeisen piirretyn layerin arvot j‰‰v‰t k‰ytettyyn matriisiin)
-                        // 2. Jos parametri on piilotettu (t‰llˆin matriisiin ei lasketa arvoja ollenkaan)
-						NFmiPoint projectedPoint(itsDataViewFrame.Project(theRelativePoint));
-						value = itsIsolineValues.InterpolatedValue(projectedPoint, itsParamId);
+                        // The drawing matrix belongs to the last rendered parameter. Recalculate
+                        // this parameter at the cursor pressure, preserving the displayed markers.
+                        const auto savedWindUsage = metaWindParamUsage;
+                        const auto savedForecastIndex = itsFirstForecastTimeIndex;
+                        const auto savedObsTimes = itsObsForModeFoundObsTimes;
+                        const auto savedObsLocation = crossSectionSystem->ObsForModeLocation();
+                        BOOST_SCOPE_EXIT_ALL(&)
+                        {
+                            metaWindParamUsage = savedWindUsage;
+                            itsFirstForecastTimeIndex = savedForecastIndex;
+                            itsObsForModeFoundObsTimes = savedObsTimes;
+                            crossSectionSystem->ObsForModeLocation(savedObsLocation);
+                        };
+                        NFmiFastInfoUtils::QueryInfoParamStateRestorer paramRestorer(*info);
+                        metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(info);
+                        NFmiIsoLineData tooltipIsoLineData;
+                        tooltipIsoLineData.itsInfo = info;
+                        tooltipIsoLineData.itsParam = itsDrawParam->Param();
+                        tooltipIsoLineData.itsTime = CurrentTime();
+                        std::vector<float> pressures(2, p);
+                        NFmiDataMatrix<float> values;
+                        FillObsAndForCrossSectionData(values, tooltipIsoLineData, pressures);
+                        NFmiPoint projectedPoint(itsDataViewFrame.Project(theRelativePoint));
+                        projectedPoint.Y(0.5);
+                        value = values.InterpolatedValue(projectedPoint, static_cast<FmiParameterName>(itsDrawParam->Param().GetParamIdent()));
 					}
 
 					str += paramNameString;
@@ -770,6 +820,7 @@ float NFmiCrossSectionView::GetLevelValue(boost::shared_ptr<NFmiFastQueryInfo> &
 {
     if(theInfo)
     {
+        const auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
         if(doMetaParamCheck && metaWindParamUsage.ParamNeedsMetaCalculations(itsDrawParam->Param().GetParamIdent()))
             return GetLevelValueForMetaParam(theInfo, P, theLatlon, theTime);
         else
@@ -789,6 +840,7 @@ float NFmiCrossSectionView::GetLevelValue(boost::shared_ptr<NFmiFastQueryInfo> &
 float NFmiCrossSectionView::GetLevelValueForMetaParam(boost::shared_ptr<NFmiFastQueryInfo> &theInfo, float P, const NFmiPoint &theLatlon, const NFmiMetTime &theTime)
 {
     NFmiFastInfoUtils::QueryInfoParamStateRestorer fastInfoParamStateRestorer(*theInfo);
+    const auto metaWindParamUsage = NFmiFastInfoUtils::CheckMetaWindParamUsage(theInfo);
     auto paramId = itsDrawParam->Param().GetParamIdent();
     if(metaWindParamUsage.HasWsAndWd())
     {
@@ -838,7 +890,7 @@ NFmiPoint NFmiCrossSectionView::GetCrossSectionLatlonPoint(const NFmiPoint &theR
 	{
         auto crossSectionSystem = itsCtrlViewDocumentInterface->CrossSectionSystem();
         auto crossSectionMode = itsCtrlViewDocumentInterface->CrossSectionSystem()->GetCrossMode();
-		if(crossSectionMode == NFmiCrossSectionSystem::kTime || crossSectionMode == NFmiCrossSectionSystem::kObsAndFor)
+		if(!itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView() && (crossSectionMode == NFmiCrossSectionSystem::kTime || crossSectionMode == NFmiCrossSectionSystem::kObsAndFor))
 		{ // jos ollaan aika-leikkaus moodissa, piste on selv‰, palautetaan 1. main-pointti
 			return crossSectionSystem->StartPoint();
 		}
@@ -846,9 +898,12 @@ NFmiPoint NFmiCrossSectionView::GetCrossSectionLatlonPoint(const NFmiPoint &theR
 		{
 			const std::vector<NFmiPoint> &points = GetMinorPoints();
 			int mpcount = static_cast<int>(points.size());
-			double startX = crossSectionSystem->StartXYPoint().X();
-			double width = crossSectionSystem->EndXYPoint().X() - startX;
-			double pos = (theRelativePlace.X() - startX)/(width) * (mpcount - 1);
+            double fraction = GetCrossSectionHorizontalFraction(theRelativePlace);
+            if(points.empty())
+                throw runtime_error("Cross-section has no locations.");
+            if(points.size() == 1 || fraction == 1)
+                return points.back();
+            double pos = fraction * (mpcount - 1);
 			double factor = pos - static_cast<int>(pos);
 			int firstPos = static_cast<int>(pos);
 			int secondPos = firstPos + 1;
@@ -879,7 +934,7 @@ int NFmiCrossSectionView::CalcHorizontalPointCount(void)
 	// parempi pyyt‰‰ todelliset pisteet ja katsoa kuinka monta niit‰ oli, kuin haluttujen lukum‰‰r‰‰
 	int mpcount = static_cast<int>(GetMinorPoints().size());
     auto crossSectionMode = itsCtrlViewDocumentInterface->CrossSectionSystem()->GetCrossMode();
-    if(crossSectionMode == NFmiCrossSectionSystem::kTime || crossSectionMode == NFmiCrossSectionSystem::kObsAndFor)
+    if(!itsCtrlViewDocumentInterface->TrajectorySystem()->ShowTrajectoriesInCrossSectionView() && (crossSectionMode == NFmiCrossSectionSystem::kTime || crossSectionMode == NFmiCrossSectionSystem::kObsAndFor))
 	{ // jos ollaan aika-leikkaus moodissa, pit‰‰ katsoa kuinka monta aikaa leikkauksessa on
 		boost::shared_ptr<NFmiFastQueryInfo> info = itsCtrlViewDocumentInterface->InfoOrganizer()->Info(itsDrawParam, true, true);
 		if(info)
@@ -898,7 +953,7 @@ int NFmiCrossSectionView::GetNearestCrossSectionColumn(const NFmiPoint &thePlace
 	if(itsDataViewFrame.IsInside(thePlace))
 	{
 		int mpcount = CalcHorizontalPointCount();
-		double pos = (thePlace.X() - itsDataViewFrame.Left())/(itsDataViewFrame.Width()) * (mpcount - 1);
+		double pos = GetCrossSectionHorizontalFraction(thePlace) * (mpcount - 1);
 		return boost::math::iround(pos);
 	}
 	else

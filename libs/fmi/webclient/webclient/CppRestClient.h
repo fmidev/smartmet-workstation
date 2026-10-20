@@ -10,7 +10,7 @@
 
 #include <future>
 #include <string>
-#include <set>
+#include <stdexcept>
 
 namespace Web
 {
@@ -18,17 +18,14 @@ namespace Web
     {
         std::shared_ptr<cppback::BackgroundManager> bManager_;
         Concurrency::cancellation_token_source tokenSource_;
-        web::http::client::http_client_config client_config_;
         std::string proxyUrl_;
-        mutable std::set<std::string> useProxy_;
     public:
         CppRestClient(std::shared_ptr<cppback::BackgroundManager> bManager, std::string proxyUrl = "");
         ~CppRestClient();
         std::future<std::string> queryFor(const std::string& domain, const std::string& query, int timeoutInSeconds) const final;
         void cancel() const final;
     private:
-       web::http::http_response tmp(const std::string& domain, const std::string& request, int timeoutInSeconds) const;
-       web::http::client::http_client_config createConfig(const std::string& domain, int timeoutInSeconds) const;
-       bool needsProxy(const std::string& domain) const;
+       std::string tmp(const std::string& domain, const std::string& request, int timeoutInSeconds) const;
+       web::http::client::http_client_config createConfig(bool useProxy, int timeoutInSeconds) const;
     };
 }

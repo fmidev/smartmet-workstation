@@ -7,6 +7,8 @@
 // Projektin asetuksissa C++ - Preprocessor definitions -kohdassa
 
 #pragma once
+
+constexpr UINT WM_WMS_CAPABILITIES_UPDATED = WM_APP + 148;
 #include <vector>
 #include "NFmiViewPosRegistryInfo.h"
 #include "PPToolTip.h"
@@ -98,6 +100,8 @@ public:
 	void DoAppDataBaseCollection(int theAction);
     static std::string MakeUsedWinRegistryKeyStr(unsigned int /* theMapViewDescTopIndex */) {return ViewPosRegistryInfo().WinRegistryKeyStr();}
     void ParameterSelectionSystemUpdateTimerStart(int waitTimeInSeconds);
+    afx_msg LRESULT OnWmsCapabilitiesUpdated(WPARAM, LPARAM);
+    afx_msg void OnDestroy();
 
 // Overrides
 public:

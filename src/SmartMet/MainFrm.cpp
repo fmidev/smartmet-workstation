@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "SmartMet.h"
 #include "MainFrm.h"
+#include "ApplicationInterfaceForSmartMet.h"
 #include "SmartMetDoc.h"
 #include "SmartMetView.h"
 #include "ZoomDlg.h"
@@ -238,6 +239,7 @@ const UINT uiFirstUserToolBarId = AFX_IDW_CONTROLBAR_FIRST + 40;
 const UINT uiLastUserToolBarId = uiFirstUserToolBarId + iMaxUserToolbars - 1;
 
 BEGIN_MESSAGE_MAP(CMainFrame, CFmiUsedFrameWndParent)
+    ON_MESSAGE(WM_WMS_CAPABILITIES_UPDATED, &CMainFrame::OnWmsCapabilitiesUpdated)
 	ON_WM_CREATE()
 
 #ifndef FMI_DISABLE_MFC_FEATURE_PACK
@@ -398,6 +400,8 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	{
 		itsDoc = app->GeneralDocData();
 	}
+
+    ApplicationInterfaceForSmartMet::RegisterWmsNotificationWindow(GetSafeHwnd());
 
 #ifdef FMI_DISABLE_MFC_FEATURE_PACK
 	if(!m_wndToolBar.Create(this) || !m_wndToolBar.LoadToolBar(IDR_MAINFRAME))
@@ -1350,6 +1354,19 @@ void CMainFrame::WaitQDataCacheThreadsToStop()
 		itsDoc->LogMessage("QueryData to local cache copying threads stopped, continue closing...", CatLog::Severity::Info, CatLog::Category::Operational);
 	else
 		itsDoc->LogMessage("Some problem with QueryData to local cache copying threads stoppage, continue closing anyway...", CatLog::Severity::Error, CatLog::Category::Operational);
+}
+
+LRESULT CMainFrame::OnWmsCapabilitiesUpdated(WPARAM, LPARAM)
+{
+    if(itsDoc)
+        itsDoc->WmsSupportHasDoneGetCapabilitiesQuery();
+    return 0;
+}
+
+void CMainFrame::OnDestroy()
+{
+    ApplicationInterfaceForSmartMet::UnregisterWmsNotificationWindow();
+    CFmiUsedFrameWndParent::OnDestroy();
 }
 
 void CMainFrame::ParameterSelectionSystemUpdateTimerStart(int waitTimeInSeconds)
